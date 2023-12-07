@@ -29,12 +29,12 @@ export * from "./components/account-selector";
 /**
  * Convenience functions
  */
-export * from "./api/use-accounts";
-export * from "./api/use-account";
-export * from "./api/use-personal-account";
-export * from "./api/use-account-members";
-export * from "./api/use-account-invitations";
-export * from "./api/use-account-billing-status";
+export * from "./hooks/use-accounts";
+export * from "./hooks/use-account";
+export * from "./hooks/use-personal-account";
+export * from "./hooks/use-account-members";
+export * from "./hooks/use-account-invitations";
+export * from "./hooks/use-account-billing-status";
 export * from "./components/basejump-user-session";
 export * from "./components/signed-out";
 export * from "./components/signed-in";

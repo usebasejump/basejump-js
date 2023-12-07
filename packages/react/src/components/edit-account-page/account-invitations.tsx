@@ -1,12 +1,12 @@
-import { BasePropsWithClient } from "../../types/base-props.ts";
-import { en, I18nVariables } from "@usebasejump/shared";
-import { merge } from "@supabase/auth-ui-shared";
-import { Table } from "../ui/table.tsx";
+import {BasePropsWithClient} from "../../types/base-props.ts";
+import {en, I18nVariables} from "@usebasejump/shared";
+import {merge} from "@supabase/auth-ui-shared";
+import {Table} from "../ui/table.tsx";
 import ThemeContainer from "../ui/theme-container.tsx";
-import { useAccountInvitations } from "../../api/use-account-invitations.ts";
-import { TrashIcon } from "lucide-react";
-import { Text } from "../ui/typography.tsx";
-import { formatDistanceToNow } from "date-fns";
+import {useAccountInvitations} from "../../hooks/use-account-invitations.ts";
+import {TrashIcon} from "lucide-react";
+import {Text} from "../ui/typography.tsx";
+import {formatDistanceToNow} from "date-fns";
 
 type Props = BasePropsWithClient & {
   accountId: string;

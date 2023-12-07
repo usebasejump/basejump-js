@@ -1,14 +1,14 @@
-import { BasePropsWithClient } from "../../types/base-props.ts";
-import { en, I18nVariables } from "@usebasejump/shared";
-import { merge } from "@supabase/auth-ui-shared";
+import {BasePropsWithClient} from "../../types/base-props.ts";
+import {en, I18nVariables} from "@usebasejump/shared";
+import {merge} from "@supabase/auth-ui-shared";
 import ThemeContainer from "../ui/theme-container.tsx";
-import { useAccountBillingStatus } from "../../api/use-account-billing-status.ts";
-import { Container } from "../ui/container.tsx";
-import { Text } from "../ui/typography.tsx";
-import { ACCOUNT_ROLES } from "../../types/accounts.ts";
-import { Button } from "../ui/button.tsx";
-import { NewBillingSubscriptionButton } from "../new-billing-subscription-button.tsx";
-import { ManageBillingSubscriptionButton } from "../manage-billing-subscription-button.tsx";
+import {useAccountBillingStatus} from "../../hooks/use-account-billing-status.ts";
+import {Container} from "../ui/container.tsx";
+import {Text} from "../ui/typography.tsx";
+import {ACCOUNT_ROLES} from "../../types/accounts.ts";
+import {Button} from "../ui/button.tsx";
+import {NewBillingSubscriptionButton} from "../new-billing-subscription-button.tsx";
+import {ManageBillingSubscriptionButton} from "../manage-billing-subscription-button.tsx";
 
 type Props = BasePropsWithClient & {
   accountId: string;

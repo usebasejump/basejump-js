@@ -1,24 +1,17 @@
 "use client";
 
-import { ReactNode } from "react";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-} from "@radix-ui/react-dropdown-menu";
+import {ReactNode} from "react";
+import {DropdownMenu, DropdownMenuTrigger,} from "@radix-ui/react-dropdown-menu";
 import ThemeContainer from "./ui/theme-container";
-import { BasePropsWithClient } from "../types/base-props";
-import {
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-} from "./ui/dropdown-menu";
-import { en, I18nVariables } from "@usebasejump/shared";
-import { merge } from "@supabase/auth-ui-shared";
-import { SupabaseClient } from "@supabase/supabase-js";
-import { CreateAccountButton } from "./create-account-button";
-import { Avatar } from "./ui/avatar";
-import { usePersonalAccount } from "../api/use-personal-account.ts";
-import { EditAccountButton } from "./edit-account-button.tsx";
+import {BasePropsWithClient} from "../types/base-props";
+import {DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator,} from "./ui/dropdown-menu";
+import {en, I18nVariables} from "@usebasejump/shared";
+import {merge} from "@supabase/auth-ui-shared";
+import {SupabaseClient} from "@supabase/supabase-js";
+import {CreateAccountButton} from "./create-account-button";
+import {Avatar} from "./ui/avatar";
+import {usePersonalAccount} from "../hooks/use-personal-account.ts";
+import {EditAccountButton} from "./edit-account-button.tsx";
 
 type Props = BasePropsWithClient & {
   children?: ReactNode;

@@ -1,27 +1,16 @@
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandList,
-} from "../ui/command";
-import { useAccounts } from "../../api/use-accounts";
-import { useBasejumpClient } from "../basejump-user-session";
-import { useMemo, useState } from "react";
-import {
-  CREATE_ACCOUNT_RESPONSE,
-  en,
-  GET_ACCOUNTS_RESPONSE,
-  I18nVariables,
-} from "@usebasejump/shared";
-import { BasePropsWithoutClient } from "../types/base-props";
-import { merge } from "@supabase/auth-ui-shared";
-import { css } from "@stitches/core";
-import { ChevronsUpDown, PlusCircle } from "lucide-react";
-import { Avatar } from "../ui/avatar";
-import { AccountSelectorLine } from "./account-selector-line.tsx";
-import { CreateAccountButton } from "../create-account-button";
+import {Popover, PopoverContent, PopoverTrigger} from "../ui/popover";
+import {Command, CommandEmpty, CommandGroup, CommandInput, CommandList,} from "../ui/command";
+import {useAccounts} from "../../hooks/use-accounts";
+import {useBasejumpClient} from "../basejump-user-session";
+import {useMemo, useState} from "react";
+import {CREATE_ACCOUNT_RESPONSE, en, GET_ACCOUNTS_RESPONSE, I18nVariables,} from "@usebasejump/shared";
+import {BasePropsWithoutClient} from "../types/base-props";
+import {merge} from "@supabase/auth-ui-shared";
+import {css} from "@stitches/core";
+import {ChevronsUpDown, PlusCircle} from "lucide-react";
+import {Avatar} from "../ui/avatar";
+import {AccountSelectorLine} from "./account-selector-line.tsx";
+import {CreateAccountButton} from "../create-account-button";
 
 type Props = BasePropsWithoutClient & {
   currentAccountId?: string;

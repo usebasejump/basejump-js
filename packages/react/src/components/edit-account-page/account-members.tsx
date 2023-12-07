@@ -1,10 +1,10 @@
-import { BasePropsWithClient } from "../../types/base-props.ts";
-import { useAccountMembers } from "../../api/use-account-members.ts";
-import { en, I18nVariables } from "@usebasejump/shared";
-import { merge } from "@supabase/auth-ui-shared";
-import { Table } from "../ui/table.tsx";
-import { Text } from "../ui/typography.tsx";
-import { IndividualAccountMemberDropdown } from "./individual-account-member-dropdown.tsx";
+import {BasePropsWithClient} from "../../types/base-props.ts";
+import {useAccountMembers} from "../../hooks/use-account-members.ts";
+import {en, I18nVariables} from "@usebasejump/shared";
+import {merge} from "@supabase/auth-ui-shared";
+import {Table} from "../ui/table.tsx";
+import {Text} from "../ui/typography.tsx";
+import {IndividualAccountMemberDropdown} from "./individual-account-member-dropdown.tsx";
 import ThemeContainer from "../ui/theme-container.tsx";
 
 type Props = BasePropsWithClient & {

@@ -1,17 +1,13 @@
 "use client";
-import {
-  ACCEPT_INVITATION_RESPONSE,
-  en,
-  I18nVariables,
-} from "@usebasejump/shared";
-import { useState } from "react";
-import { Container } from "../ui/container";
-import { Button } from "../ui/button";
+import {ACCEPT_INVITATION_RESPONSE, en, I18nVariables,} from "@usebasejump/shared";
+import {useState} from "react";
+import {Container} from "../ui/container";
+import {Button} from "../ui/button";
 import ThemeContainer from "../ui/theme-container";
-import { BasePropsWithClient } from "../../types/base-props";
-import { merge } from "@supabase/auth-ui-shared";
-import { Header1, Text } from "../ui/typography.tsx";
-import { useAccountInvitationLookup } from "../../api/use-account-invitation-lookup.ts";
+import {BasePropsWithClient} from "../../types/base-props";
+import {merge} from "@supabase/auth-ui-shared";
+import {Header1, Text} from "../ui/typography.tsx";
+import {useAccountInvitationLookup} from "../../hooks/use-account-invitation-lookup.ts";
 import ErrorMessage from "../ui/error-message.tsx";
 
 interface Props extends BasePropsWithClient {

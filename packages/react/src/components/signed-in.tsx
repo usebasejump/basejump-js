@@ -8,9 +8,8 @@ type Props = {
 }
 
 /**
- * This component will only render its children if the user is logged in.
+ * This component will only render its children if the user is signed in.
  * @param children
- * @constructor
  */
 export const SignedIn = ({children}: Props) => {
     const session = useBasejumpSession();

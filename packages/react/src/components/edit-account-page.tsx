@@ -1,18 +1,18 @@
-import { Header1, Header3 } from "./ui/typography";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
-import { EditAccountForm } from "./forms/edit-account-form";
-import { Container } from "./ui/container";
-import { BasePropsWithClient } from "../types/base-props";
+import {Header1, Header3} from "./ui/typography";
+import {Tabs, TabsContent, TabsList, TabsTrigger} from "./ui/tabs";
+import {EditAccountForm} from "./forms/edit-account-form";
+import {Container} from "./ui/container";
+import {BasePropsWithClient} from "../types/base-props";
 import BasejumpTheme from "../themes/default-theme";
-import { en, I18nVariables } from "@usebasejump/shared";
-import { merge } from "@supabase/auth-ui-shared";
+import {en, I18nVariables} from "@usebasejump/shared";
+import {merge} from "@supabase/auth-ui-shared";
 import ThemeContainer from "./ui/theme-container";
-import { AccountMembers } from "./edit-account-page/account-members.tsx";
-import { InviteMemberButton } from "./invite-member-button.tsx";
-import { Button } from "./ui/button.tsx";
-import { useAccount } from "../api/use-account.ts";
-import { AccountInvitations } from "./edit-account-page/account-invitations.tsx";
-import { AccountBilling } from "./edit-account-page/account-billing.tsx";
+import {AccountMembers} from "./edit-account-page/account-members.tsx";
+import {InviteMemberButton} from "./invite-member-button.tsx";
+import {Button} from "./ui/button.tsx";
+import {useAccount} from "../hooks/use-account.ts";
+import {AccountInvitations} from "./edit-account-page/account-invitations.tsx";
+import {AccountBilling} from "./edit-account-page/account-billing.tsx";
 
 type Props = BasePropsWithClient & {
   accountId?: string;
@@ -38,11 +38,7 @@ export const EditAccountPage = ({
   const i18n: I18nVariables = merge(en, localization?.variables ?? {});
   const labels = i18n?.edit_account_page;
 
-  const { data: account } = useAccount({
-    accountId,
-    accountSlug,
-    supabaseClient,
-  });
+  const { data: account } = useAccount(supabaseClient, accountId);
 
   return (
     <ThemeContainer appearance={appearance} theme={theme}>

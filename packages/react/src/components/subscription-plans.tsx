@@ -1,12 +1,12 @@
-import { useBillingPlans } from "../api/use-billing-plans.ts";
-import { useMemo, useState } from "react";
-import { BasePropsWithClient } from "../types/base-props.ts";
-import { en, I18nVariables } from "@usebasejump/shared";
-import { merge } from "@supabase/auth-ui-shared";
-import { css } from "@stitches/core";
-import { Container } from "./ui/container.tsx";
-import { Button } from "./ui/button.tsx";
-import { IndividualPlan } from "./subscription-plans/individual-plan.tsx";
+import {useBillingPlans} from "../hooks/use-billing-plans.ts";
+import {useMemo, useState} from "react";
+import {BasePropsWithClient} from "../types/base-props.ts";
+import {en, I18nVariables} from "@usebasejump/shared";
+import {merge} from "@supabase/auth-ui-shared";
+import {css} from "@stitches/core";
+import {Container} from "./ui/container.tsx";
+import {Button} from "./ui/button.tsx";
+import {IndividualPlan} from "./subscription-plans/individual-plan.tsx";
 
 type Props = BasePropsWithClient & {
   accountId?: string;
