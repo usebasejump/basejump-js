@@ -11,5 +11,8 @@ export * from "./hooks/use-account-invitation-lookup";
 export * from "./hooks/use-account-billing-status";
 export * from "./hooks/use-billing-plans";
 export * from "./components/basejump-user-session";
-export * from "./components/signed-out";
-export * from "./components/signed-in";
+
+/**
+ * No changes to these
+ */
+export { SignedOut, SignedIn, useBasejumpSession, useBasejumpClient, useBasejumpProvider } from '@usebasejump/react';

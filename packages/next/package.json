@@ -1,5 +1,5 @@
 {
-  "name": "@usebasejump/react",
+  "name": "@usebasejump/next",
   "version": "0.0.1",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
@@ -13,15 +13,18 @@
     "build": "tsup"
   },
   "peerDependencies": {
-    "@supabase/supabase-js": "^2.21.0"
+    "@supabase/supabase-js": "^2.21.0",
+    "@supabase/ssr": "^0.0.10"
   },
   "dependencies": {
-    "@usebasejump/shared": "*",
+    "@usebasejump/react": "*",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "swr": "^2.2.4"
   },
   "devDependencies": {
+    "@supabase/supabase-js": "^2.21.0",
+    "@supabase/ssr": "^0.0.10",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "eslint": "^7.32.0",

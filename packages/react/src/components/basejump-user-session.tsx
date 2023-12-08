@@ -1,8 +1,7 @@
 "use client";
 
 import {createContext, ReactNode, useContext, useEffect, useMemo, useState} from "react";
-import {AuthError, SupabaseClient} from "@supabase/supabase-js";
-import {Session} from "@supabase/auth-helpers-react";
+import {AuthError, Session, SupabaseClient} from "@supabase/supabase-js";
 
 type Props = {
   supabaseClient: SupabaseClient;
