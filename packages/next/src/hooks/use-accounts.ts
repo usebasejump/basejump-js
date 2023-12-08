@@ -1,6 +1,6 @@
 "use client";
 
-import {createClient} from "../utils/create-client.ts";
+import {createClient} from "../utils/create-client";
 import {useAccounts as useAccountsReact} from "@usebasejump/react";
 import {SWRConfiguration} from "swr";
 

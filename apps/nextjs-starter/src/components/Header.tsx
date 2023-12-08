@@ -1,27 +1,44 @@
 import NextLogo from './NextLogo.tsx'
 import SupabaseLogo from './SupabaseLogo.tsx'
+import BasejumpLogo from "./BasejumpLogo.tsx";
 
 export default function Header() {
   return (
     <div className="flex flex-col gap-16 items-center">
       <div className="flex gap-8 justify-center items-center">
+          <a
+              href="https://usebasejump.com?utm_source=create-next-app&utm_medium=template&utm_term=basejump"
+              target="_blank"
+              rel="noreferrer"
+          >
+            <BasejumpLogo />
+          </a>
+          <span className="border-l rotate-45 h-6" />
         <a
-          href="@/components/Header.tsx?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
+          href="https://supabase.com?utm_source=create-next-app&utm_medium=template&utm_term=basejump"
           target="_blank"
           rel="noreferrer"
         >
           <SupabaseLogo />
         </a>
         <span className="border-l rotate-45 h-6" />
-        <a href="@/components/Header.tsx" target="_blank" rel="noreferrer">
+        <a href="https://nextjs.org" target="_blank" rel="noreferrer">
           <NextLogo />
         </a>
       </div>
-      <h1 className="sr-only">Supabase and Next.js Starter Template</h1>
+      <h1 className="sr-only">Basejump, Supabase and Next.js Starter Template</h1>
       <p className="text-3xl lg:text-4xl !leading-tight mx-auto max-w-xl text-center">
-        The fastest way to build apps with{' '}
+        The fastest way to ship using {' '}
+          <a
+              href="https://usebasejump.com?utm_source=create-next-app&utm_medium=template&utm_term=basejump"
+              target="_blank"
+              className="font-bold hover:underline"
+              rel="noreferrer"
+          >
+              Basejump
+          </a>{', '}
         <a
-          href="@/components/Header.tsx?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
+          href="https://supabase.com?utm_source=create-next-app&utm_medium=template&utm_term=basejump"
           target="_blank"
           className="font-bold hover:underline"
           rel="noreferrer"
@@ -30,7 +47,7 @@ export default function Header() {
         </a>{' '}
         and{' '}
         <a
-          href="@/components/Header.tsx"
+          href="https://nextjs.org"
           target="_blank"
           className="font-bold hover:underline"
           rel="noreferrer"

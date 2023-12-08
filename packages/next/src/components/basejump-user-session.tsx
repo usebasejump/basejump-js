@@ -2,7 +2,7 @@
 
 import {ReactNode} from "react";
 import {BasejumpUserSession as BasejumpUserSessionReact} from "@usebasejump/react";
-import {createClient} from "../utils/create-client.ts";
+import {createClient} from "../utils/create-client";
 
 type Props = {
   children: ReactNode;

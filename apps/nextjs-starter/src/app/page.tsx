@@ -1,33 +1,16 @@
-import DeployButton from '../components/DeployButton.tsx'
-import AuthButton from '../components/AuthButton.tsx'
-import {createClient} from '@/utils/supabase/server.ts'
-import ConnectSupabaseSteps from '@/components/ConnectSupabaseSteps.tsx'
-import SignUpUserSteps from '@/components/SignUpUserSteps.tsx'
+import GettingStarted from '@/components/GettingStartedSteps.tsx'
 import Header from '@/components/Header.tsx'
-import {cookies} from 'next/headers'
+import AuthenticatedNavigation from "@/components/AuthenticatedNavigation.tsx";
+import Logo from "@/components/Logo.tsx";
 
 export default async function Index() {
-  const cookieStore = cookies()
-
-  const canInitSupabaseClient = () => {
-    // This function is just for the interactive tutorial.
-    // Feel free to remove it once you have Supabase connected.
-    try {
-      createClient(cookieStore)
-      return true
-    } catch (e) {
-      return false
-    }
-  }
-
-  const isSupabaseConnected = canInitSupabaseClient()
 
   return (
     <div className="flex-1 w-full flex flex-col gap-20 items-center">
       <nav className="w-full flex justify-center border-b border-b-foreground/10 h-16">
-        <div className="w-full max-w-4xl flex justify-between items-center p-3 text-sm">
-          <DeployButton />
-          {isSupabaseConnected && <AuthButton />}
+        <div className="w-full max-w-screen-lg flex justify-between items-center p-3 text-sm">
+            <Logo />
+            <AuthenticatedNavigation />
         </div>
       </nav>
 
@@ -35,21 +18,14 @@ export default async function Index() {
         <Header />
         <main className="flex-1 flex flex-col gap-6">
           <h2 className="font-bold text-4xl mb-4">Next steps</h2>
-          {isSupabaseConnected ? <SignUpUserSteps /> : <ConnectSupabaseSteps />}
+          <GettingStarted />
         </main>
       </div>
 
-      <footer className="w-full border-t border-t-foreground/10 p-8 flex justify-center text-center text-xs">
+      <footer className="w-full border-t border-t-foreground/10 p-8 flex justify-center gap-x-2 items-center text-sm">
+          <p className="text-3xl">🐯</p>
         <p>
-          Powered by{' '}
-          <a
-            href="@/app/page.tsx?utm_source=create-next-app&utm_medium=template&utm_term=nextjs"
-            target="_blank"
-            className="font-bold hover:underline"
-            rel="noreferrer"
-          >
-            Supabase
-          </a>
+            There&apos;s treasure everywhere
         </p>
       </footer>
     </div>

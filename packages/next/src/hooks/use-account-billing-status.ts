@@ -1,6 +1,6 @@
 "use client";
 
-import {createClient} from "../utils/create-client.ts";
+import {createClient} from "../utils/create-client";
 import {useAccountBillingStatus as useAccountBillingStatusReact} from "@usebasejump/react";
 import {SWRConfiguration} from "swr";
 

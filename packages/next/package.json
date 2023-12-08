@@ -10,7 +10,8 @@
   "license": "MIT",
   "scripts": {
     "lint": "tsc --noEmit",
-    "build": "tsup"
+    "build": "tsup",
+    "dev": "tsup --watch --clean"
   },
   "peerDependencies": {
     "@supabase/supabase-js": "^2.21.0",

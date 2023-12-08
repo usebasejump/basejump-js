@@ -12,7 +12,8 @@
   ],
   "scripts": {
     "lint": "tsc --noEmit",
-    "build": "tsup"
+    "build": "tsup",
+    "dev": "tsup --watch --clean"
   },
   "author": "Tiniscule",
   "license": "MIT",
