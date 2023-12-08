@@ -1,0 +1,97 @@
+export const meta = {
+    title: "Oauth and magic links with Supabase and NextJS middleware",
+    description: "How to use Supabase's Oauth and magic link providers with NextJS middleware",
+    published: "2022-11-19",
+    category: "Supabase"
+}
+
+One of the benefits of using Supabase is their out-of-the-box support for common authentication methods like Google, Github and email/sms authentication. Coupled with RLS (Row level security) and NextJS middleware, it lets you get up and running quickly with a robus authentication/authorization system. But there are a few gotchas worth knowing about to create a seamless experience.
+
+## How authenticating with Supabase works
+If you check out the [Supabase docs](https://supabase.com/docs/guides/auth/server-side-rendering#understanding-the-authentication-flow), you'll see that when you call the `signIn` method from your client, Supabase will detect the auth method desired, perform the required steps, and then redirect the authenticated user back to your app. Unfortunately, the redirected URL is sent with the authentication tokens as hash params - which are not immediately accessible from the server. Instead, the browser client will detect the hash tokens after the render is complete and set the auth cookies then.
+
+## Stuck in a loop
+Because the NextJS middleware does not have access to the hash tokens until the client has detected them and set the cookie, the user experiences the following flow:
+
+![Auth flow](/images/blog/supabase-oauth-with-nextjs-middleware/auth-flow.png)
+
+1. Anonymous hits a private route on your app, the NextJS middleware will detect this and force them to a `/login` page.
+2. User authenticates using oauth such as Google
+3. Supabase redirects the user back to your app with the authentication tokens in the URL hash
+4. The NextJS middleware does _not_ have access to the tokens, so it forces the user back to `/login` again
+5. Client side detects the hash tokens, authenticates, and sets the cookie
+6. The user could now access the private route, but they don't know this because they're still stuck on the `/login` page
+
+## A not-so-great solution
+I haven't been able to find a decent way to avoid this issue - the NextJS middleware doesn't have any access to the hash tokens, so it won't have a way to detect the user has just authenticated until the client loads. Some folks recommended [using a specific post-authentication page to listen for the authentication to load](https://github.com/supabase/auth-helpers/issues/341#issuecomment-1319597309), but the issue there is that you'd need to evolve that over time to handle auth failure conditions.
+
+Instead, I've opted to perform this check on my `login` and `signup` pages directly. This way, failure states are easy to recover for the user since they're already on the login page.
+
+Here's my [use-auth-check.ts](https://github.com/usebasejump/basejump/blob/main/src/utils/use-auth-check.ts) hook
+
+```typescript
+import { useRouter } from "next/router";
+import { useSessionContext } from "@supabase/auth-helpers-react";
+import { useEffect } from "react";
+
+const useAuthCheck = (redirectedFrom?: string) => {
+  const { replace } = useRouter();
+  const { session } = useSessionContext();
+
+  useEffect(() => {
+    if (session && redirectedFrom) {
+      replace(redirectedFrom as string);
+    }
+  }, [session, redirectedFrom]);
+};
+
+export default useAuthCheck;
+
+```
+
+And the [middleware.ts](https://github.com/usebasejump/basejump/blob/main/src/middleware.ts) file, which blocks unauthenticated requests from reaching protected routes
+
+```typescript
+import { createMiddlewareSupabaseClient } from "@supabase/auth-helpers-nextjs";
+import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+
+export async function middleware(req: NextRequest) {
+  const res = NextResponse.next();
+  const supabase = await createMiddlewareSupabaseClient({ req, res });
+
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  // Check auth condition
+  if (session) {
+    // Authentication successful, forward request to protected route.
+    return res;
+  }
+
+  // Auth condition not met, redirect to home page.
+  const redirectUrl = req.nextUrl.clone();
+  redirectUrl.pathname =
+    req.nextUrl.pathname === "/invitation" ? "/signup" : "/login";
+  redirectUrl.searchParams.set(`redirectedFrom`, req.url);
+  return NextResponse.redirect(redirectUrl);
+}
+
+export const config = {
+  matcher: ["/dashboard/:path*", "/invitation"],
+};
+    
+ ```
+
+Finally, the [login](https://github.com/usebasejump/basejump/blob/main/src/pages/login.tsx) and [signup](https://github.com/usebasejump/basejump/blob/main/src/pages/signup.tsx) pages get the following added to detect the authenticated session and redirect the user to the final destination.
+
+```typescript
+const router = useRouter();
+const { redirectedFrom } = router.query;
+
+useAuthCheck(redirectedFrom as string);
+```
+
+## Remaining issues
+There are a few issues with this approach, but the most annoying one is that there is a flicker on the landing page where the user will see a login screen for a brief moment before getting redirected.  That delay is caused by waiting for the supabase client to load, detect the session, and then trigger the route change. I'm still thinking through ways to improve that, but for now users can at least complete an invitation link auth flow without confusion.

@@ -1,0 +1,76 @@
+import {Col, Row} from "@/components/mdx";
+export const description = "Let's get Stripe setup for your local development environment and project"
+
+# Setting up Stripe
+
+Getting Stripe setup for your project is quick and easy, but requires you to think a bit about how you'd like to charge for your app.
+
+## Understanding how to configure Stripe
+Basejump allows you to set a default plan and trial period for new users.  Set these options in your `basejump.config` table.
+
+They have a few different consequences based on how you configure it
+
+### Default users into a plan with a trial period (recommended)
+* Users can access your app immediately
+* Users do NOT need to enter a credit card
+* Accounts expire, prompting users to enter a credit card at the end of the trial
+* Users can opt into a different plan on their account settings page
+
+### Default users into a plan without a trial period
+* Users are blocked from access until they provide a card
+* Users can change their plan when providing a card IF you enable this in Stripe
+* Users can opt into a different plan on their account settings page
+
+### Default users into a free plan
+* Users can access your app immediately
+* Users do NOT need to enter a credit card
+* Users can opt into a different plan on their account settings page
+
+---
+
+## Setting up your Stripe products
+We use Stripe products to track the different plans you offer.  Typically, you'd create a product for each "tier" that you offer - then create prices for monthly and yearly.
+
+You also have the option of creating one-time plans. Basejump does not enforce any specific payment options, we just honor the subscription status out of Stripe.
+
+For example, here we've created a Premium plan for $10/month, or $100/year.
+
+![Stripe products](/images/docs/stripe-products.png)
+
+## Getting your Stripe key
+You'll need to get your Stripe private key out of your dashboard and add them to your environment variables.
+
+The public token is not used, since we leverage checkout sessions and customer dashboards directly.
+
+For local development, make sure you're in TEST mode.  Consult the [environment variables](/docs/environment-variables) page for more information.
+
+![Stripe tokens](/images/docs/stripe-tokens.png)
+
+---
+
+<Row>
+    <Col>
+        ## Setup your Stripe webhooks (Production only)
+        This is mostly important for production, but when you're ready you need to set up Stripe webhooks.  That allows Basejump to keep track of account statuses.
+
+        First, head to your Stripe dashboard, click on the `Developers` tab and select `Webhooks`.
+
+        * Endpoint URL: `https://<your-instance>.com/billing-webhooks`
+        * Listen To: `Events on your account`
+        * Events:
+        * `product.created`
+        * `product.updated`
+        * `price.created`
+        * `price.updated`
+        * `checkout.session.completed`
+        * `customer.subscription.created`
+        * `customer.subscription.updated`
+        * `customer.subscription.deleted`
+        * `customer.created`
+        * `customer.updated`
+        * `customer.deleted`
+    </Col>
+    <Col>
+        ![Stripe webhooks](/images/docs/stripe-webhooks.png)
+    </Col>
+</Row>

@@ -1,0 +1,71 @@
+import {Note} from "@/components/mdx.jsx";
+export const meta = {
+    title: 'SignedIn / SignedOut Components - React',
+    description: 'Show content when a customer is logged in or logged out   '
+}
+
+# SignedIn / SignedOut Component
+
+These components are used to show content when a user is logged in or out. They're particularly useful for building your navigation.
+
+<Note>
+    Utility components are only intended to be helpful, they're in no way required. In fact, they don't even touch any Basejump functionality, only Supabase.
+</Note>
+
+## Usage
+The `<SignedIn>` and `<SignedOut>` components need to be nested inside of a `<BasejumpUserSession>` component.  The `<BasejumpUserSession>` component is responsible for managing the user session and providing it to the other components.
+
+<CodeGroup>
+        ```jsx {{title: 'Next.js'}}
+        import {BasejumpUserSession,SignedIn,SignedOut} from "@usebasejump/next";
+        import UserProfileButton from "./UserProfileButton";
+        import Link from "next/link";
+
+
+        export default function Navigation() {
+                return (
+                    <nav>
+                        <Link href="/">Home</Link>
+                        <Link href="/pricing">Pricing</Link>
+                        <Link href="/contact">Contact</Link>
+                        <BasejumpUserSession>
+                            <SignedIn>
+                                <UserProfileButton />
+                            </SignedIn>
+                            <SignedOut>
+                                <Link href="/login">Login</Link>
+                            </SignedOut>
+                        </BasejumpUserSession>
+                    </nav>
+                )
+            }
+        ```
+        ```jsx {{title: 'React'}}
+        import {BasejumpUserSession,SignedIn} from "@usebasejump/react";
+        import {createClient} from "@supabase/supabase-js";
+        import UserProfileButton from "./UserProfileButton";
+
+        export default function Navigation() {
+            const supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            return (
+                <nav>
+                    <a href="/">Home</a>
+                    <a href="/pricing">Pricing</a>
+                    <a href="/contact">Contact</a>
+                    <BasejumpUserSession supabaseClient={supabaseClient}>
+                        <SignedIn>
+                            <UserProfileButton />
+                        </SignedIn>
+                        <SignedOut>
+                            <a href="/login">Login</a>
+                        </SignedOut>
+                    </BasejumpUserSession>
+                </nav>
+            )
+        }
+        ```
+</CodeGroup>
+
+## Installation
+
+The `<SignedIn>`, `<SignedOut>` and `<BasejumpUserSession>` components are part of the `@usebasejump/react` and `@usebasejump/next` packages. If you've followed the [installation instructions](/docs/react) you should be ready to go.

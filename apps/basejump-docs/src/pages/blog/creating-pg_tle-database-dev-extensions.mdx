@@ -1,0 +1,261 @@
+export const meta = {
+    title: "Creating Supabase & Postgres extensions for database.dev",
+    category: "Supabase",
+    published: "2023-04-16",
+    description: "Learn how to create pg_TLE / dbdev extensions for Postgres and Supabase"
+}
+
+> This guide is a work in progress as I learn more about creating database.dev extensions, but should be useful as-is. If you have feedback or find any issues, beat me up on [Twitter](https://twitter.com/tiniscule).
+
+Supabase recently [announced dbdev and database.dev](https://supabase.com/blog/dbdev), an exciting new package manager that allows you to install trusted extensions to Postgres without requiring access to the filesystem. It does this by leveraging [pg_tle](https://github.com/aws/pg_tle), an extension from AWS that provides the installation functionality for extensions written using an approved subset of typical Postgres extension functionality.
+
+This was an awesome fit for my [Supabase test helpers](https://github.com/usebasejump/supabase-test-helpers) library, so I decided to take some time to convert the helper into a dbdev extension.  This guide is a quick overview of what I've learned and how you can create your own extensions as well.
+
+## What we'll cover
+
+- [What is the difference between pg_tle and dbdev](#difference)
+- [What languages can I use?](#languages)
+- [Writing functions for your extension](#writing-tests-for-supabase)
+- [Things I've learned writing extension functions](#function-learnings)
+- [Converting your functions into a pg_tle extension](#pg_tle)
+- [How can users install my extension?](#installing)
+- [Getting extensions listed on database.dev](#database-dev)
+- [Adding a new extension](#database-dev-new-extension)
+- [Updating an existing extension](#database-dev-update-extension)
+- [Testing your extension](#testing)
+- [Testing with Supabase](#testing-supabase)
+- [Testing without Supabase](#testing-non-supabase)
+- [Automating pg_tle and database.dev extensions with Github Actions](#github-action)
+
+## <a id="difference">What is the difference between pg_tle and dbdev?</a>
+#### TLDR
+pg_tle allows external Postgres extensions to be installed without filesystem access. dbdev makes it way easier to do so.
+
+#### Longer version
+pg_tle is the underlying technology that allows external extensions to be installed in Postgres without requiring access to the file system. If you've worked with managed Postgres instances often, you'll know this is a massive deal. As long as the database has pg_tle installed, you'll have the ability to install "most" extensions on your own.  I say "most" because the format is still fairly new, and while I expect it to get popular quite fast, it will take some time for all our favorites to get ported over.
+
+dbdev and database.dev are a layer on top of pg_tle that provide a trusted extension repository and remote installation. For an example on how this works, you can check out my [supabase_test_helpers pg_tle function](https://github.com/usebasejump/supabase-test-helpers/commit/c2c0cfbbdeeca9eb5d779d41bee2607a7ca2bf49#diff-2c4e0c2e1667f265ecc45bc32d8805716b5ef02b200055ea6b445ca4684d0c16). You'll notice the `pgtle.install_extension` call at the top containing all the extension functionality.  That's awesome, but cumbersome.  Once approved on database.dev, that installation would become `dbdev.install_extension('basejump-supabase_test_helpers').
+
+## <a id="languages">What languages can I use?</a>
+At launch time, pg_tle supports SQL, PL/pgSQL, pl/v8 (javascript) and pl/perl.  Support for pl/rust is coming soon.
+
+I suspect more languages get added over time.
+
+## <a id="functions">Writing functions for your extension</a>
+Extensions are effectively a collection of functions. Since the details here will vary based on what you're building, I won't go into specific functionality too much.  Instead, I'll give a quick example of some functions and mention a few random things I've learned while building supabase_test_functions.
+
+#### Example function
+
+```sql
+-- Create a schema for your extension
+CREATE SCHEMA IF NOT EXISTS my_extension;
+
+-- Create a generic function for my extension
+CREATE OR REPLACE FUNCTION my_extension.my_function(value text)
+RETURNS text
+AS $$
+    SELECT value;
+$$ LANGUAGE SQL;
+```
+
+#### <a id="function-learnings">Things I've learned creating extension functions</a>
+- I like to create all of my functions as `CREATE OR REPLACE` so that it's easy to update them without having to drop them first
+- It can be a good idea to create a specific schema for your functions. That allows finer grained control over who has access. For supabase users, that also keeps the functions from being exposed through the API. For example, in [supabase_test_helpers](https://github.com/usebasejump/supabase-test-helpers) I use:
+```sql
+CREATE SCHEMA IF NOT EXISTS tests;
+
+-- anon and authenticated should have access to tests schema
+GRANT USAGE ON SCHEMA tests TO anon, authenticated;
+-- Don't allow public to execute any functions in the tests schema
+ALTER DEFAULT PRIVILEGES IN SCHEMA tests REVOKE EXECUTE ON FUNCTIONS FROM public;
+-- Grant execute to anon and authenticated for testing purposes
+ALTER DEFAULT PRIVILEGES IN SCHEMA tests GRANT EXECUTE ON FUNCTIONS TO anon, authenticated;
+```
+- You can overload your functions by assigning default values to some of your function inputs.  For example:
+```sql
+
+CREATE OR REPLACE FUNCTION  my_function(value text default 'hello world') RETURNS text AS $$
+    SELECT value;
+$$ LANGUAGE SQL;
+
+SELECT my_function(); -- returns 'hello world'
+SELECT my_function('hello'); -- returns 'hello'
+```
+
+- By default, functions are executed with the current user role. In the context of Supabase, that'll typically mean either your `authenticated` user or `anon` for anonymous requests. You can get around that by defining your function as `SECURITY DEFINER`, which gets run with elevated permissions. You almost always want to avoid `SECURITY DEFINER`. If you need to use it, make sure you set a `search_path` as well, typically to `public`.  [Supabase talks about this more here](https://supabase.com/docs/guides/database/functions#security-definer-vs-invoker).
+
+## <a id="pg_tle">Converting your functions into a pg_tle extension</a>
+Now that your functions are created, converting them into a pg_tle extension is super straight forward.  You'll just wrap your function in the pgtle.install_extension function.
+
+```sql
+SELECT pgtle.install_extension
+(
+ 'my_extension',
+ '0.1',
+  'This is a quick description of your extension',
+$_pg_tle_$
+  -- YOUR EXTENSION FUNCTIONS GO HERE
+$_pg_tle_$
+);
+```
+
+For example:
+
+```sql
+SELECT pgtle.install_extension
+(
+ 'my_extension',
+ '0.1',
+  'This is a quick description of your extension',
+$_pg_tle_$
+    -- Create a schema for your extension
+    CREATE SCHEMA IF NOT EXISTS my_extension;
+
+    -- Create a generic function for my extension
+    CREATE OR REPLACE FUNCTION my_extension.my_function(value text)
+    RETURNS text
+    AS $$
+        SELECT value;
+    $$ LANGUAGE SQL;
+$_pg_tle_$
+);
+```
+
+## <a id="installing">How can users install my extension?</a>
+Extensions were meant to be shared. Out of the box, your users will need to enable pg_tle on their database and then run your above `pgtle.install_extension` function in its entirety to leverage your code.  It's a bit cumbersome, and that's where `dbdev` and [database.dev](https://database.dev) come in. But we'll tackle that in a bit, to start, here's how your users can install unapproved extensions.
+
+```sql
+CREATE EXTENSION IF NOT EXISTS pgtle;
+
+SELECT pgtle.install_extension
+(
+ 'my_extension',
+ '0.1',
+  'This is a quick description of your extension',
+$_pg_tle_$
+    -- Create a schema for your extension
+    CREATE SCHEMA IF NOT EXISTS my_extension;
+
+    -- Create a generic function for my extension
+    CREATE OR REPLACE FUNCTION my_extension.my_function(value text)
+    RETURNS text
+    AS $$
+        SELECT value;
+    $$ LANGUAGE SQL;
+$_pg_tle_$
+);
+
+CREATE EXTENSION my_extension;
+
+SELECT my_extension.my_function('hello world'); -- returns 'hello world'
+```
+
+## <a id="database-dev">Getting extensions listed on database.dev?</a>
+If you want to get your extension listed on [database.dev](https://database.dev), you'll need to get it approved by the Supabase team.
+
+> They're working on an API for extension submission, but for now it requires opening up a PR on the [database.dev repo](https://github.com/supabase/dbdev).
+
+1. First, create an account at [database.dev](https://database.dev)
+
+2.  Extensions are maintained as a list of migration files into the database.dev database.  The format is:
+
+```sql
+
+-- First we upsert the extension into the app.packages table
+insert into app.packages(
+    handle,
+    partial_name,
+    control_description,
+    control_relocatable,
+    control_requires
+)
+values (
+    'your_database_dev_handle',
+    'your_extension_name',
+    'Your extension description',
+    false, -- set to true if your extension is relocatable
+    '{}' -- set to a json array of extension names that your extension requires
+) on conflict (handle, partial_name) do update set
+    control_description = excluded.control_description,
+    control_relocatable = excluded.control_relocatable,
+    control_requires = excluded.control_requires;
+
+insert into app.package_versions(package_id, version_struct, sql, description_md)
+values (
+(select id from app.packages where package_name = 'your_database_dev_handle-your_extension_name'), -- handle-partial_name
+(1,0,0), -- your semver version number
+$pkg$ -- start of your extension
+-- YOUR EXTENSION FUNCTIONS GO HERE
+$pkg$, -- end of your extension
+
+$description$ -- start of your description
+# Markdown text content goes here
+$description$ -- end of your description
+);
+```
+
+3. Submit your extension to the Supabase team by opening a PR to the [database.dev repo](https://github.com/supabase/dbdev).  Check out some examples [here](https://github.com/supabase/dbdev/tree/master/supabase/migrations).  If you want to see an example submission, [checkout the supabase_test_helpers PR here](https://github.com/supabase/dbdev/pull/51).
+
+## <a id="testing">Testing your extension</a>
+It's a good idea to test your extension using [pgTAP](https://pgtap.org/) before you publish it. I have a [full guide on creating tests for Supabase here](https://usebasejump.com/blog/testing-on-supabase-with-pgtap). You can also view some example tests from my [supabase-test-helpers project](https://github.com/usebasejump/supabase-test-helpers/tree/main/tests).
+
+#### <a id="testing-supabase">Testing for Supabase installations</a>
+Supabase comes with pgTAP already configured and ready to go, making it easy to generate your tests. I like to create a sample supabase project outside of my extension directory.
+
+1. Make sure you have the latest version of the [Supabase CLI](https://supabase.com/docs/guides/cli) installed
+2. Next, create a new project using the CLI and start it
+```bash
+mkdir supabase-test-project && cd supabase-test-project && supabase init
+supabase start
+```
+3. Create your tests in `./supabase/tests/your-test.sql`
+4. Activate the pg_tle extension using psql
+```bash
+PGASSWORD=postgres psql -v ON_ERROR_STOP=1 -U postgres -d postgres -h localhost -p 54322 -c "CREATE EXTENSION pg_tle;"
+```
+5. Install your extension using psql
+```bash
+PGASSWORD=postgres psql -v ON_ERROR_STOP=1 -U postgres -d postgres -h localhost -p 54322 -f ./my-extension-pglet.sql
+```
+6. Run your tests
+```bash
+supabase test db
+```
+
+#### <a id="testing-non-supabase">Testing on a non Supabase installation</a>
+If you're not using Supabase, you can still use pgTAP to test your extension.  You'll just need to install it yourself using the [instructions here](https://pgtap.org). Once installed on your local database, you can perform the same steps as above. When it comes to running your tests, just make sure you run them using `pg_prov` instead of `supabase test db`.
+
+## <a id="github-action">Automating pg_tle and database.dev extensions with Github Actions</a>
+> I'm working on some automation to make it easier to generate pg_tle and database.dev extensions.  I'll update this section once I have something to share. Just waiting to get through the process a bit more before I make them public.
+
+#### Automating your extension tests
+Assuming you've located your tests in a project root `tests` directory, here's a quick Github Action that will run them for you using the Supabase CLI.
+
+```yaml
+name: PGTap Tests
+on:
+  pull_request:
+    branches: [ main ]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: supabase/setup-cli@v1
+        with:
+          version: 1.50.4
+      - name: Supabase Start
+        run: supabase init && supabase start
+      - name: Enable pgtle
+        run: psql -v ON_ERROR_STOP=1 -U postgres -d postgres -h localhost -p 54322 -c "CREATE EXTENSION pg_tle;"
+        env:
+          PGPASSWORD: postgres
+      - name: Install supabase_test_helpers extension
+        run: psql -v ON_ERROR_STOP=1 -U postgres -d postgres -h localhost -p 54322 -f ./your-pg_tle-extension.sql
+        env:
+          PGPASSWORD: postgres
+      - name: Move files into supabase tests directory
+        run: mkdir ./supabase/tests && mv ./tests/* ./supabase/tests/
+      - name: Run Tests
+        run: supabase test db
+```

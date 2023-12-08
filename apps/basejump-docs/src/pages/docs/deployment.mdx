@@ -1,0 +1,46 @@
+export const description = "Learn how to deploy your supabase project"
+
+# Deploying Basejump
+
+Once you're ready to go to production, deploying to your Supabase account is easy. This guide assumes that you've already [installed the Supabase CLI](https://supabase.com/images/docs/guides/cli)
+
+## Setup your account
+
+Head to [Supabase](https://supabase.com) and create a new project. Make sure you record your database password somewhere secure, you'll need it later.
+![Create a new Supabase project](/images/docs/new-supabase-project.png)
+
+## Setup the Supabase CLI
+In general, you can follow the [official guide](https://supabase.com/images/docs/guides/cli/local-development#deploy-your-project) for up to date info.
+
+### Login to Supabase
+```bash
+supabase login
+```
+
+### Link your project
+You can get your project ID on the Settings page of your project. To finish this, you'll need the database password you input when creating your project.
+```bash
+supabase link --project-ref <project-id>
+```
+
+## Run your migrations
+You'll need your database password for this step too.
+```bash
+supabase db push
+```
+
+## Deploy your edge functions
+The billing portion of Basejump is handled through two edge functions - one for general billing lookups and one for handling provider webhooks.
+
+To deploy them, you'll first add your secrets to production
+
+```bash
+supabase secrets set STRIPE_API_KEY=<your-stripe-secret-key>
+supabase secrets set STRIPE_WEBHOOK_SIGNING_SECRET=<your-stripe-webhook-secret>
+```
+
+Then you can deploy the functions
+```bash
+supabase functions deploy billing-functions
+supabase functions deploy billing-webhooks --no-verify-jwt
+```

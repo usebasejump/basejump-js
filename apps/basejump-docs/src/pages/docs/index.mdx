@@ -1,0 +1,28 @@
+import {Guides} from '@/components/Guides.jsx'
+import {Resources} from '@/components/Resources.jsx'
+import {HeroPattern} from '@/components/HeroPattern.jsx'
+
+export const description =
+    'Learn everything there is to know about using Basejump to build your next great product.'
+
+export const sections = [
+    {title: 'Guides', id: 'guides'},
+    {title: 'Resources', id: 'resources'},
+]
+
+<HeroPattern/>
+
+# Get started with Basejump
+
+Basejump adds personal accounts, team accounts, invitations and subscription billing to your Supabase project.  Use it as a launching point for your Supabase app, or as a standalone auth API similar to Auth0 or Clerk.
+
+We offer a React UI Kit to help you get started, but you can use Basejump with any frontend framework or platform.
+
+<div className="not-prose mb-16 mt-6 flex gap-3">
+    <Button href="/docs/installation" arrow="right" children="Quickstart"/>
+    <Button href="/docs/react" variant="outline" children="React UI Kit"/>
+</div>
+
+<Guides/>
+
+<Resources/>

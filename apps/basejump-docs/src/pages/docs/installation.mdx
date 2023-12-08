@@ -1,0 +1,167 @@
+export const description =
+  'This guide will get you all set up and ready to use the Protocol API. We’ll cover how to get started an API client and how to make your first API request.'
+
+# Quickstart (recommended)
+
+This guide will walk you through the process of getting started with Basejump. It assume you've [already installed the Supabase CLI](https://supabase.com/docs/guides/cli/getting-started).
+
+## Setup your local project
+Create a folder for your project and initialize it with the Supabase CLI.
+
+```bash
+mkdir my-project && cd my-project
+supabase init
+```
+
+## Add Basejump
+Basejump proves a CLI that makes it easy to install into your Supabase project.
+
+```bash
+npx @usebasejump/cli@latest init
+```
+
+## That's it!
+You're now ready to start Supabase and begin development using Basejump.
+
+```bash
+supabase start
+```
+
+## What's next?
+
+Great, you're now ready to start using Basejump. Here are some guides to help you get started:
+
+- [Learn how to add protected tables to your Supabase project](/docs/rls)
+- [Launch faster using our React component library](/docs/react)
+- [Learn how to fetch data from your Supabase clients](/docs/fetching-data)
+
+<br /><br />
+
+# Manual installation (not recommended)
+The manual installation process is a bit more involved, but not too bad. You'll just need to create a few migration files and functions.
+
+## Install DBDev
+Basejump leverages dbdev to manage installation. If you haven't already, you'll need to install dbdev according to the instructions on [database.dev](https://database.dev)
+
+## Create a migration for Basejump
+First you'll create a migration file for Supabase and install the extension.
+
+```bash
+supabase migration new install-basejump
+```
+
+Now drop the following into the newly created migration file. You'll want to make sure you use the [newest basejump version on database.dev](https://database.dev/basejump/basejump_core).
+
+```sql {{title: "./supabase/migrations/00000000000000_install-basejump.sql"}}
+select dbdev.install('basejump-basejump_core');
+create extension "basejump-basejump_core"
+    version '2.0.1';
+```
+
+## Setup your billing provider
+<Note>
+    You do not need to setup billing to get started with Basejump. You can skip this step until you're ready to launch. We're including it here to show how easy it is
+</Note>
+Basejump provides support for Stripe out of the box. Setting it up requires adding a few Supabase edge functions to your project.
+
+```bash
+supabase functions new billing-functions
+supabase functions new billing-webhooks
+```
+Now, setup these functions.
+
+```typescript {{title: "./supabase/functions/billing-functions/index.ts"}}
+import {serve} from "https://deno.land/std@0.168.0/http/server.ts";
+import {billingFunctionsWrapper, stripeFunctionHandler} from "https://deno.land/x/basejump@v2.0.1/billing-functions/mod.ts";
+
+import Stripe from "https://esm.sh/stripe@11.1.0?target=deno";
+
+const stripeClient = new Stripe(Deno.env.get("STRIPE_API_KEY") as string, {
+    apiVersion: "2022-11-15",
+    httpClient: Stripe.createFetchHttpClient(),
+});
+
+const stripeHandler = stripeFunctionHandler({
+    stripeClient,
+    defaultPlanId: Deno.env.get("STRIPE_DEFAULT_PLAN_ID") as string,
+    defaultTrialDays: Deno.env.get("STRIPE_DEFAULT_TRIAL_DAYS") ? Number(Deno.env.get("STRIPE_DEFAULT_TRIAL_DAYS")) : undefined
+});
+
+const billingEndpoint = billingFunctionsWrapper(stripeHandler, {
+    allowedURLs: ['http://localhost:3000']
+});
+
+serve(async (req) => {
+    const response = await billingEndpoint(req);
+    return response;
+});
+
+```
+
+```typescript {{title: "./supabase/functions/billing-webhooks/index.ts"}}
+/***
+ * THESE FUNCTIONS ARE FOR TESTING PURPOSES ONLY.
+ * TO SETUP ON YOUR OWN, HEAD TO https://usebasejump.com
+ */
+
+import {serve} from "https://deno.land/std@0.168.0/http/server.ts";
+import {billingWebhooksWrapper, stripeWebhookHandler} from "https://deno.land/x/basejump@v2.0.1/billing-functions/mod.ts";
+import Stripe from "https://esm.sh/stripe@11.1.0?target=deno";
+
+const stripeClient = new Stripe(Deno.env.get("STRIPE_API_KEY") as string, {
+    apiVersion: "2022-11-15",
+    httpClient: Stripe.createFetchHttpClient(),
+});
+
+const stripeResponse = stripeWebhookHandler({
+    stripeClient,
+    stripeWebhookSigningSecret: Deno.env.get("STRIPE_WEBHOOK_SIGNING_SECRET") as string,
+});
+
+const webhookEndpoint = billingWebhooksWrapper(stripeResponse);
+
+serve(async (req) => {
+    const response = await webhookEndpoint(req);
+    return response;
+});
+
+```
+
+## Don't require authentication for billing webhooks
+You'll need to add a new rule to your Supabase project to allow Stripe to send webhooks without authentication.
+
+```toml {{title: "./supabase/config.toml"}}
+[functions.billing-webhooks]
+verify_jwt = false
+```
+
+## Add Stripe environment variables
+You'll need to add your Stripe API key to your Supabase project. You can find your API key in your Stripe dashboard. For local development, make sure you're using your test mode key.
+
+<Note>
+Never check your `.env` file into git. It contains sensitive information that should not be shared.
+</Note>
+
+```bash {{title: "./supabase/functions/.env"}}
+STRIPE_API_KEY=sk_test_123
+STRIPE_WEBHOOK_SIGNING_SECRET=whsec_123
+STRIPE_DEFAULT_PLAN_ID=price_123
+STRIPE_DEFAULT_TRIAL_DAYS=30
+```
+
+## Start Supabase
+Now that you've added Basejump and your billing functions, you're ready to start Supabase.
+
+```bash
+supabase start
+```
+
+The script will output all the api keys and tokens needed to begin development.
+
+## What's next?
+
+Great, you're now ready to start using Basejump. Here are some guides to help you get started:
+
+- [Learn how to add protected tables to your Supabase project](/docs/rls)
+- [Launch faster using our React component library](/docs/react)
+- [Learn how to fetch data from your Supabase clients](/docs/fetching-data)

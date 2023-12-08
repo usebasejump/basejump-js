@@ -1,0 +1,40 @@
+export const description =
+    'Understanding personal and team accounts in Basejump'
+
+# Understanding accounts and roles
+
+Out of the box, we support personal accounts and team accounts.
+
+A good example of this in the wild is Github, where you have your own personal account, but can also create team accounts.
+
+## Personal Accounts
+* Created automatically when a user signs up, using the user's ID as the Account ID
+* Do NOT support invitations or multiple members
+* DO support billing through Stripe
+
+**Personal accounts cannot be disabled**, they are always created. You can choose to ignore them by simply not creating any interfaces for them and disabling billing for them.
+
+
+## Team Accounts
+* Any user can create a team
+* DO support billing through Stripe
+* DO support invitations and multiple members
+* The user who creates the account becomes the `primary_owner`
+* `owner` users can manage invitations, users and billing
+* `member` have access to accounts, but can not edit them
+* `primary_owner` cannot be removed, but you can change the primary owner of an account
+
+To enable team accounts, set `team_accounts_enabled` to true in the `basejump.config` table.
+
+## Team member roles
+Basejump provides a set of roles that you can use to configure your permissions. You can also create your own roles if you need to.
+
+* `owner` - Owners have access to everything, including billing and inviting new users
+* `member` - Members can access the account, but cannot invite new users or manage billing
+
+### Adding a new role
+To add a new role, you need to add it to the `basejump.account_roles` enum value in postgres.  New roles do not have any special permissions by default, any RLS policies defined using basic account member checks will apply to the new role.
+
+```sql
+ALTER TYPE basejump.account_role ADD VALUE 'your_new_role';
+```

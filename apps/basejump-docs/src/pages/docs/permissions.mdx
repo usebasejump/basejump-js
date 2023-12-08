@@ -1,0 +1,243 @@
+import {Note, Properties, Property} from "@/components/mdx.jsx";
+export const description =
+    'API endpoints for managing account member permissions in Supabase with Basejump'
+
+# Permissions
+
+In most cases, you won't need to use the permissions API directly. Instead, each account returns the current users role in the `get_account` lookup function. In some cases, however, it can be useful to have dedicated functions for lookup.
+
+---
+
+## Current user role {{ tag: 'POST', label: '/rpc/current_user_account_role' }}
+
+<Row>
+    <Col>
+
+        Returns the current users role for a given account.
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                Unique UUID for the account you're trying to lookup
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/current_user_account_role">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/rest/v1/rpc/current_user_account_role \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"account_id": "uuid"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('current_user_account_role', {
+                account_id: "uuid"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="current_user_account_role", params = {
+                "account_id": "uuid"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "account_role": "member",
+            "is_primary_owner": false,
+            "is_personal_account": false
+        }
+        ```
+    </Col>
+</Row>
+
+---
+
+## Update user role {{ tag: 'POST', label: '/rpc/update_account_user_role' }}
+
+<Row>
+    <Col>
+
+        Updates the role of a user in a given account. Also allows you to change the primary owner of an account.
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                Unique UUID for the account you're trying to lookup
+            </Property>
+            <Property name="user_id" type="uuid">
+                Unique UUID for the user you're trying to update the role for
+            </Property>
+            <Property name="new_account_role" type="account_role">
+                The new role you want to assign to the user. By default can be `member` or `owner` unless you've added custom roles.
+            </Property>
+        </Properties>
+
+        ### Optional attributes
+        <Properties>
+            <Property name="make_primary_owner" type="boolean">
+                <Note>Only the current primary owner can make this change.</Note>
+                Defaults to `false`. If you want to make the user the primary owner of the account, set this to `true`. You must also set the user's role to `owner` when doing this.
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/update_account_user_role">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/rest/v1/rpc/update_account_user_role \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"account_id": "uuid", "user_id": "uuid", "new_account_role": "member"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('update_account_user_role', {
+                account_id: "uuid",
+                user_id: "uuid",
+                new_account_role: "member"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="update_account_user_role", params = {
+                "account_id": "uuid",
+                "user_id": "uuid",
+                "new_account_role": "member"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        empty response
+        ```
+    </Col>
+</Row>
+
+---
+
+## Check for user role on account {{ tag: 'FUNCTION', label: 'basejump.has_role_on_account' }}
+
+<Row>
+    <Col>
+        Checks if the current user has a specific role on a given account.
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                Unique UUID for the account you're trying to lookup
+            </Property>
+        </Properties>
+
+
+
+        ### Optional attributes
+        <Properties>
+            <Property name="Account Role" type="account_role">
+                Defaults to `null`, returning true if the user has any role on the account. Accepts any defined account role. For example, passing in `owner` will only return true if the user is an owner on the account.
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Usage" tag="FUNCTION" label="basejump.get_accounts_with_role">
+
+            ```sql {{title: 'RLS Policy'}}
+            -- only account members can view posts
+            create policy "Only members can view posts" on posts
+            for select
+            to authenticated
+            using (
+             basejump.has_role_on_account(account_id) = true
+            );
+
+            -- only account owners can update posts
+            create policy "Only owners can update posts" on posts
+            for update
+            to authenticated
+            using (
+                basejump.has_role_on_account(account_id, 'owner') = true
+            );
+            ```
+
+            ```sql {{title: 'SQL'}}
+            SELECT basejump.has_role_on_account('uuid', 'owner');
+            ```
+
+        </CodeGroup>
+
+    </Col>
+</Row>
+
+---
+
+## Lookup user accounts with role {{ tag: 'FUNCTION', label: 'basejump.get_accounts_with_role' }}
+
+<Row>
+    <Col>
+        Generates a secure token of a given length.
+
+        ### Optional attributes
+        <Properties>
+            <Property name="Account Role" type="account_role">
+                Defaults to `null`, returning all accounts the user is a member of. Limit the results to accounts where the current user has a specific role. For example, passing in `owner` will return only accounts the user is the owner of.
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Usage" tag="FUNCTION" label="basejump.get_accounts_with_role">
+
+            ```sql {{title: 'RLS Policy'}}
+            -- only account members can view posts
+            create policy "Only members can view posts" on posts
+                for select
+                to authenticated
+                using (
+                    account_id IN (SELECT basejump.get_accounts_with_role())
+                );
+
+            -- only account owners can update posts
+            create policy "Only owners can update posts" on posts
+                for update
+                to authenticated
+                using (
+                    account_id IN (SELECT basejump.get_accounts_with_role('owner'))
+                );
+            ```
+
+            ```sql {{title: 'SQL'}}
+
+            SELECT basejump.get_accounts_with_role('owner');
+            ```
+
+        </CodeGroup>
+
+    </Col>
+</Row>

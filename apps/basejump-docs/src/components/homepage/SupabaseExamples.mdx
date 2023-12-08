@@ -1,0 +1,28 @@
+import {CodeGroup} from "@/components/mdx.jsx";
+
+
+<CodeGroup title="Extending Supabase">
+
+    ```plsql
+    -- Create the tasks table
+    CREATE TABLE IF NOT EXISTS tasks (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        account_id uuid NOT NULL REFERENCES basejump.accounts(id),
+        title TEXT NOT NULL,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    -- enable RLS on tasks table
+    ALTER TABLE tasks ENABLE ROW LEVEL SECURITY;
+
+    -- allow team members to view tasks
+    CREATE POLICY "Only members can view tasks" on tasks
+        FOR SELECT
+        TO authenticated
+        USING (
+            account_id IN (SELECT basejump.get_accounts_for_current_user())
+        );
+
+    ```
+
+</CodeGroup>

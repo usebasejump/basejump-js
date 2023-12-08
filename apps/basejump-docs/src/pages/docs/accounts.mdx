@@ -1,0 +1,542 @@
+import {Properties, Property} from "@/components/mdx.jsx";
+export const description =
+    'API endpoints for managing accounts in Supabase with Basejump'
+
+# Accounts
+
+Accounts are the core of Basejump. They allow you to manage users, teams, billing and permissions for your app. By default, Basejump enables both personal and team accounts.
+
+## Team vs personal accounts
+Basejump supports personal accounts, team accounts, or a combination of the two.
+
+- **Personal accounts**: Owned by a single user, and can only be accessed by that user.
+- **Team accounts**: Supports inviting team members with various permission levels to access the account.
+
+If you opt into both personal and team accounts, your app will operate similar to sites like Github. When a user signs up, a personal account will be created for them.  They'll then have the ability to create team accounts as well.
+
+## The account model
+
+Not all endpoints return all account data - particularly around billing as that can require additinoal calls to third parties to verify. Below is a breakdown of fields you can expect to get back when interacting with accounts.
+
+### Properties
+
+<Properties>
+    <Property name="account_id" type="uuid">
+        Unique identifier for the account.
+    </Property>
+    <Property name="account_role" type="string">
+        The current user's role within the account. Typically `member` or `owner`.
+    </Property>
+    <Property name="is_primary_owner" type="boolean">
+        Tells you if the current user is the primary owner of the account.
+    </Property>
+    <Property name="name" type="string">
+        The name of the account.
+    </Property>
+    <Property name="slug" type="string">
+        Unique slug for the account. Useful for things like subdomains or paths.
+    </Property>
+    <Property name="personal_account" type="boolean">
+        Indicates if the account is a personal account.
+    </Property>
+    <Property name="created_at" type="timestamp">
+        Timestamp of when the account was created.
+    </Property>
+    <Property name="updated_at" type="timestamp">
+        Timestamp of when the account was last updated.
+    </Property>
+    <Property name="billing_status" type="string">
+        The current billing status of the account. One of `trialing`, `active`, `canceled`, `incomplete`, `incomplete_expired`, `past_due`, `unpaid`
+    </Property>
+    <Property name="metadata" type="json">
+        Any additional metadata you've added to the account. There are two metadata fields on the accounts table. `public_metadata` and `private_metadata`. This field returns public metadata. Private is never returned unless you have the service role.
+    </Property>
+</Properties>
+
+---
+
+## List all accounts {{ tag: 'POST', label: '/rpc/get_accounts' }}
+
+<Row>
+    <Col>
+
+        Returns a list of all accounts an authenticated user is a member of. This includes both personal and team accounts.
+
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/get_accounts">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/rest/v1/rpc/get_accounts \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('get_accounts');
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="get_accounts").execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        [
+            {
+                "account_id": "uuid",
+                "account_role": "member",
+                "is_primary_owner": true,
+                "name": "Team name",
+                "slug": "team-slug",
+                "personal_account": true,
+                "created_at": "timestamp",
+                "updated_at": "timestamp",
+            },
+            ...
+        ]
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## Create an account {{ tag: 'POST', label: '/rpc/create_account' }}
+
+<Row>
+    <Col>
+
+        Allows any authenticated user to create a new team account. This endpoint will fail if you've disabled team accounts in your Basejump settings. The user who creates the account will automatically be set as the primary owner.
+
+        ### Optional attributes
+
+        <Properties>
+            <Property name="slug" type="string">
+                Unique slug representing the team. This is not required by default, but can be made required for your setup.
+            </Property>
+            <Property name="name" type="string">
+                Display name of the account
+            </Property>
+        </Properties>
+
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/create_account">
+
+            ```bash {{title: 'cURL'}}
+            curl https://YOUR_SUPABASE/rest/v1/rpc/create_account \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"name": "Team name", "slug": "team-slug"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('create_account', {
+                name: "Your team",
+                slug: "your-team"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="create_account", params={
+                "slug": "team-slug",
+                "name": "your team"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "account_id": "uuid",
+            "account_role": "owner",
+            "is_primary_owner": true,
+            "name": "Your Team",
+            "slug": "your-team",
+            "personal_account": false,
+            "billing_status": "active",
+            "created_at": "timestamp",
+            "updated_at": "timestamp",
+            "metadata": {
+                "your_field": "your_value"
+            }
+        }
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## Retrieve an account {{ tag: 'POST', label: '/rpc/get_account' }}
+
+<Row>
+    <Col>
+
+        Allows you to retrieve an account by its account ID.
+
+        ### Required attributes
+
+        <Properties>
+            <Property name="account_id" type="uuid">
+                Unique UUID for the account you're trying to lookup
+            </Property>
+        </Properties>
+
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/get_account">
+
+            ```bash {{title: 'cURL'}}
+            curl https://YOUR_SUPABASE/rest/v1/rpc/get_account \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"account_id": "uuid"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('get_account', {
+                account_id: "uuid"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="get_account", params={
+                "account_id": "uuid"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "account_id": "uuid",
+            "account_role": "owner",
+            "is_primary_owner": true,
+            "name": "Your Team",
+            "slug": "your-team",
+            "personal_account": false,
+            "billing_enabled": true,
+            "billing_status": "active",
+            "created_at": "timestamp",
+            "updated_at": "timestamp",
+            "metadata": {
+                "your_field": "your_value"
+            }
+        }
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## Retrieve personal account {{ tag: 'POST', label: '/rpc/get_personal_account' }}
+
+<Row>
+    <Col>
+
+        Allows you to retrieve the personal account for the current user
+
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/get_personal_account">
+
+            ```bash {{title: 'cURL'}}
+            curl https://YOUR_SUPABASE/rest/v1/rpc/get_personal_account \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('get_personal_account');
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="get_personal_account").execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "account_id": "uuid",
+            "account_role": "owner",
+            "is_primary_owner": true,
+            "name": "Your Team",
+            "slug": "your-team",
+            "personal_account": false,
+            "billing_enabled": true,
+            "billing_status": "active",
+            "created_at": "timestamp",
+            "updated_at": "timestamp",
+            "metadata": {
+                "your_field": "your_value"
+            }
+        }
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## Lookup account by slug {{ tag: 'POST', label: '/rpc/get_account_by_slug' }}
+
+<Row>
+    <Col>
+
+        Allows you to retrieve an account by its account slug.
+
+        ### Required attributes
+
+        <Properties>
+            <Property name="slug" type="string">
+                Unique slug for the account you're trying to lookup
+            </Property>
+        </Properties>
+
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/get_account_by_slug">
+
+            ```bash {{title: 'cURL'}}
+            curl https://YOUR_SUPABASE/rest/v1/rpc/get_account_by_slug \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"slug": "your-team"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('get_account_by_slug', {
+                slug: "your-team"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="get_account_by_slug", params={
+                "slug": "your-team"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "account_id": "uuid",
+            "account_role": "owner",
+            "is_primary_owner": true,
+            "name": "Your Team",
+            "slug": "your-team",
+            "personal_account": false,
+            "billing_enabled": true,
+            "billing_status": "active",
+            "created_at": "timestamp",
+            "updated_at": "timestamp",
+            "metadata": {
+                "your_field": "your_value"
+            }
+        }
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## Lookup account ID with slug {{ tag: 'POST', label: '/rpc/get_account_id' }}
+
+<Row>
+    <Col>
+
+        Allows you to retrieve an account ID with a slug. Mostly useful as a part of other queries.
+
+        ### Required attributes
+
+        <Properties>
+            <Property name="slug" type="string">
+                Unique slug for the account you're trying to lookup
+            </Property>
+        </Properties>
+
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/get_account_by_slug">
+
+            ```bash {{title: 'cURL'}}
+            curl https://YOUR_SUPABASE/rest/v1/rpc/get_account_id \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"slug": "your-team"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('get_account_id', {
+            slug: "your-team"
+        });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="get_account_id", params={
+            "slug": "your-team"
+        }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```text {{title: 'Response'}}
+            uuid
+        ```
+    </Col>
+</Row>
+
+---
+
+## Update an account {{ tag: 'POST', label: '/rpc/update_account' }}
+
+<Row>
+    <Col>
+
+        Allows an account owner to update the account's name, slug, or metadata.
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                Unique UUID for the account you're trying to update
+            </Property>
+        </Properties>
+
+        ### Optional attributes
+
+        <Properties>
+            <Property name="name" type="string">
+                The name of the team / account
+            </Property>
+            <Property name="slug" type="string">
+                A unique identifier for the team. Useful for things like subdomains.
+            </Property>
+            <Property name="public_metadata" type="json">
+                A JSON object containing any custom metadata you'd like to store on the account.
+            </Property>
+            <Property name="replace_metadata" type="boolean" >
+                Default false. If true, this will replace the existing metadata object with the new one. If false, it will merge the new metadata with the existing metadata.
+            </Property>
+        </Properties>
+
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/update_account">
+
+            ```bash {{title: 'cURL'}}
+            curl https://YOUR_SUPABASE/rest/v1/rpc/update_account \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json" \
+            -d '{"account_id": "uuid", "slug": "new-slug-1"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('update_account', {
+                account_id: "uuid",
+                slug: "new-slug-1"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="update_account", params={
+                "account_id": "uuid",
+                "slug": "new-slug-1"
+            }).execute()
+            ```
+
+        </CodeGroup>
+        ```json {{title: 'Response'}}
+        {
+            "account_id": "uuid",
+            "account_role": "owner",
+            "is_primary_owner": true,
+            "name": "Your Team",
+            "slug": "your-team",
+            "personal_account": false,
+            "billing_status": "active",
+            "created_at": "timestamp",
+            "updated_at": "timestamp",
+            "metadata": {
+                "your_field": "your_value"
+            }
+        }
+        ```
+
+    </Col>
+</Row>

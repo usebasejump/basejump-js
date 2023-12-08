@@ -1,0 +1,225 @@
+export const meta = {
+    title: "Working with Supabase Edge Functions for Basejump",
+    published: "2023-04-23",
+    description: "Learn how to leverage supabase Edge Functions",
+    category: "Supabase",
+}
+
+
+As a NextJS enthusiast, I often rely on it for most of my projects. However, recently, I have been exploring other
+frameworks like Remix for web and SwiftUI for iOS. It's got me thinking how cool it would be to leverage Basejump more
+as a headless starter kit, that way you could bring your own front end.
+
+Unfortunately, when the first version of Basejump was created, Supabase did not support developing with multiple Edge
+Functions at once. It made working with it locally nearly impossible. But
+since [launch week 7](https://supabase.com/launch-week), Supabase now provides full support for local Edge Functions. I
+decided to take the weekend and migrate Basejump over so that I could begin the process of making a headless version.
+Here's what I learned.
+
+You can follow along the [Basejump code changes from this article here](https://github.com/usebasejump/basejump/pull/31)
+.
+
+## What we'll cover
+
+- [Creating and running Edge Functions locally](#local)
+- [Calling Edge Functions from your front end](#calling)
+- [Sharing code between Edge Functions](#sharing)
+- [Setting up your IDE for Deno support](#deno)
+- [Setting up your functions to support CORS](#cors)
+- [Working with dependencies and import maps](#dependencies)
+- [Using environment variables locally and in production](#env)
+- [Deploying Edge Functions to Supabase](#deploying)
+- [Additional Resources](#resources)
+
+## <a id="local">Creating and running Edge Functions locally</a>
+
+Creating Edge Functions locally is pretty straight forward.
+
+1. Make sure you have the latest version of the [Supabase CLI](https://supabase.com/docs/guides/cli) installed
+2. Run `supabase functions new my-function-name`.
+3. Your function will be created inside the `./supabase/functions/my-function-name` folder.
+
+Your functions will be run automatically when you run `supabase start`. You can also run them manually
+with `supabase functions serve`. Running them manually allows you to pass additional configuration such as local
+environment variables or an import map.
+
+## <a id="calling">Calling Edge Functions from your front end</a>
+
+When you create a new Edge Function, Supabase will automatically create a new route for you. Those routes are callable
+via the API, but there are also some nice convenience functions in the SDK's that wire up the authentication for you.
+
+```ts
+
+import {supabase} from "./supabaseClient";
+
+const {data, error} = supabase.functions.invoke('my-function-name', {param1: 'value1', param2: 'value2'});
+
+```
+
+## <a id="sharing">Sharing code between Edge Functions</a>
+
+Your Edge Functions will all be located inside of your `./supabase/functions` folder. Because functions are written in
+Deno, you'll want to maintain a `_shared` folder for any shared code leveraged between functions. This is particularly
+useful for things like your supabase client. Here's an example of a service/admin client
+
+```ts
+import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
+import {Database} from "./types/supabase.ts";
+
+const supabaseAdmin = createClient<Database>(
+    Deno.env.get("SUPABASE_URL") as string,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") as string
+);
+
+export default supabaseAdmin;
+```
+
+## <a id="deno">Setting up your IDE for Deno support</a>
+
+Supabase functions are written in Deno (or recently Dart, but this guide focuses primarily on Deno). Leveraging Deno
+gives the Supabase team some nice security benefits out of the box - unfortunately it also creates a bit of a learning
+curve for folks new to Deno. Likely the first thing you'll notice is that your IDE will show all sorts of lint issues -
+this is particularly the case if you're sharing a project root between a frontend client and your Supabase folder.
+
+#### Setting up VS Code for Deno
+
+1. Install the [Deno plugin for VS Code](https://marketplace.visualstudio.com/items?itemName=denoland.vscode-deno).
+2. Update your local project file to configure explicit paths for Deno. This will allow you to use normal JS/Typescript
+linting in the rest of your project
+
+```json
+// .vscode/settings.json
+{
+  "deno.enable": true,
+  "deno.unstable": true,
+  "deno.enablePaths": [
+    "supabase/functions"
+  ]
+}
+```
+
+#### Setting up Webstorm for Deno
+
+1. Install the [Deno plugin for Webstorm](https://plugins.jetbrains.com/plugin/14382-deno).
+2. Update your local project file to configure explicit paths for Deno. This will allow you to use normal JS/Typescript
+linting in the rest of your project
+
+```json
+// Preferences -> Languages & Frameworks -> Deno -> Init command
+{
+  "lint": true,
+  "unstable": true,
+  "importMap": "import_map.json",
+  "config": "deno.json",
+  "enablePaths": [
+    "./supabase/functions"
+  ]
+}
+```
+
+3. Enable Deno support for your project
+4. Restart Webstorm
+
+## <a id="cors">Setting up your functions to support CORS</a>
+
+By default, Supabase functions do not support CORS. The JS client, however, makes cross domain requests - so you'll need
+to get that handled before you can start working with your functions. You'll also want to make sure to set a suitable
+CORS cache header to avoid unnecessary requests.
+
+```ts
+// supabase/functions/_shared/cors.ts
+export const corsHeaders = {
+    "Access-Control-Allow-Origin": "*",
+    "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+    "Access-Control-Max-Age": 86400
+};
+```
+
+Next, you'll import this into each of your functions and leverage it for `OPTIONS` requests
+
+```ts
+// supabase/functions/my-function-name/index.ts
+import {corsHeaders} from "../_shared/cors.ts";
+
+serve(async (req) => {
+    if (req.method === "OPTIONS") {
+        return new Response("ok", {headers: corsHeaders});
+    }
+    // the rest of your function
+});
+```
+
+## <a id="dependencies">Working with NPM dependencies</a>
+
+Deno has no package manager, instead it imports dependencies directly from the web. That can cause some challenges when
+working with NPM modules which depend on your `node_modules` folder to resolve dependencies.
+
+There are some CDNs that attempt to resolve this, but I've had mixed results. Ideally, it's best to avoid using external
+dependencies as much as possible. But when you do need to, there are some options.
+
+The most popular CDN for importing npm modules as Deno packages is esm.sh. You can import any package from npm using the
+following format:
+
+```ts
+import {createClient} from "https://esm.sh/@supabase/supabase-js@2";
+```
+
+#### Working with a local import map
+
+To clean up some of your inputs and help manage versions a bit better, you can create an import_map.json file located
+at `./supabase/functions/import_map.json`. This will allow you to import your dependencies like so:
+
+```json
+// supabase/functions/import_map.json
+{
+  "imports": {
+    "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2"
+  }
+}
+```
+
+```ts
+import {createClient} from "@supabase/supabase-js";
+```
+
+Your import_map.json file will be automatically loaded by Supabase as long as it's located in the `./supabase/functions`
+folder. If you have a custom location, you can pass it in as a flag when starting your functions locally or deploying
+them.
+
+```bash
+supabase functions serve --import-map ./my-custom-location/import_map.json
+supabase functions deploy my-function-name --project-ref MY-PROJECT-ID --import-map ./my-custom-location/import_map.json
+```
+
+## <a id="env">Using environment variables locally and in production</a>
+
+By default, Supabase will inject some useful environment variables into your Edge
+Functions. [You can check them out here](https://supabase.com/docs/guides/functions/secrets#default-secrets). To add
+your own, create a file at `./supabase/.env` in the following format:
+
+```bash
+MY_FUNCTION_SECRET=supersecret
+```
+
+Next, startup your functions with `supabase functions serve --env-file ./.env`. You can now access your environment
+variables in your functions with `Deno.env.get("MY_FUNCTION_SECRET")`.
+
+#### Using environment variables in production
+
+To use custom environment variables in production, add them to your linked project by
+running `supabase secrets set MY_FUNCTION_SECRET=supersecret`.
+
+## <a id="deploying">Deploying Edge Functions to Supabase</a>
+
+To deploy your functions, run `supabase functions deploy my-function-name --project-ref MY-PROJECT-ID`. You
+can [get your project ID from the Supabase dashboard](https://app.supabase.com/project/_/settings/general). Functions
+must be deployed one at a time.
+
+## <a id="resources">Additional Resources</a>
+
+I found the following guides helpful when working through the migration - particularly the documentation and Youtube
+series. Feel free to [ping me on Twitter](https://twitter.com/tiniscule) If you have more to add!
+
+- [Edge Functions Documentation and examples](https://supabase.com/docs/guides/functions)
+- [Edge Runtime to Self Host Deno Functions](https://supabase.com/blog/edge-runtime-self-hosted-deno-functions)
+- [Edgy Edge Functions playlist](https://www.youtube.com/playlist?list=PL5S4mPUpp4OulD3olUW8Eq1IYKpUbk5Ob)
