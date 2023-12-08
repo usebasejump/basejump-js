@@ -1,9 +1,9 @@
 import {SupabaseClient} from "@supabase/supabase-js";
-import {LOOKUP_INVITATION_RESPONSE} from "@usebasejump/shared";
+import {LookupInvitationResponse} from "@usebasejump/shared";
 import useSWR, {SWRConfiguration} from "swr";
 
 export const useAccountInvitationLookup = (supabaseClient: SupabaseClient, token: string, options?: SWRConfiguration) => {
-    return useSWR<LOOKUP_INVITATION_RESPONSE>(
+    return useSWR<LookupInvitationResponse>(
         !!supabaseClient && !!token && ["account-invitation-lookup", token],
         async () => {
             const {data, error} = await supabaseClient.rpc("lookup_invitation", {

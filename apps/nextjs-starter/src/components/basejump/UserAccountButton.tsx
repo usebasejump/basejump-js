@@ -1,4 +1,4 @@
-'use client';
+'use client'
 
 import {Button} from "@/components/ui/button"
 import {
@@ -10,17 +10,17 @@ import {
     DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import {CircleUserRoundIcon} from "lucide-react";
 import {usePersonalAccount} from "@usebasejump/next";
 import Link from "next/link";
+import {UserIcon} from "lucide-react";
 
-export default function ProfileButton() {
+export default function UserAccountButton() {
     const {data: personalAccount} = usePersonalAccount();
     return (
         <DropdownMenu>
             <DropdownMenuTrigger asChild>
                 <Button variant="ghost">
-                    <CircleUserRoundIcon className="h-6 w-6"/>
+                    <UserIcon />
                 </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent className="w-56" align="end" forceMount>

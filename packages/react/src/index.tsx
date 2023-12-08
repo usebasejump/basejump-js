@@ -13,3 +13,5 @@ export * from "./hooks/use-billing-plans";
 export * from "./components/basejump-user-session";
 export * from "./components/signed-out";
 export * from "./components/signed-in";
+
+export * from "@usebasejump/shared";

@@ -1,8 +1,7 @@
 "use client"
 
-import * as React from "react"
-import {useMemo, useState} from "react"
-import {CheckIcon, ChevronsUpDownIcon, PlusCircleIcon,} from "lucide-react";
+import {ComponentPropsWithoutRef, useMemo, useState} from "react"
+import {Check, ChevronsUpDown, PlusCircle,} from "lucide-react";
 
 import {cn} from "@/lib/utils.ts"
 import {Button} from "@/components/ui/button"
@@ -19,34 +18,34 @@ import {
     Dialog,
     DialogContent,
     DialogDescription,
-    DialogFooter,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
 } from "@/components/ui/dialog"
-import {Input} from "@/components/ui/input"
-import {Label} from "@/components/ui/label"
 import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover"
-import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue,} from "@/components/ui/select"
-import {useAccounts} from "@usebasejump/next";
+import {CreateAccountResponse, useAccounts} from "@usebasejump/next";
+import NewTeamForm from "@/components/basejump/NewTeamForm.tsx";
 
-type PopoverTriggerProps = React.ComponentPropsWithoutRef<typeof PopoverTrigger>;
+type PopoverTriggerProps = ComponentPropsWithoutRef<typeof PopoverTrigger>;
 
 type SelectedAccount = ReturnType<typeof useAccounts>["data"][0] | null;
 
 interface AccountSelectorProps extends PopoverTriggerProps {
-    accountId: string;
+    defaultAccountId: string;
+    afterTeamCreated?: (account: CreateAccountResponse) => void;
+    onAccountSelected?: (account: SelectedAccount) => void;
 }
 
-export default function AccountSelector({ className, accountId, placeholder = "Select an account..." }: AccountSelectorProps) {
+export default function AccountSelector({ className, defaultAccountId, onAccountSelected, afterTeamCreated, placeholder = "Select an account..." }: AccountSelectorProps) {
     const [open, setOpen] = useState(false)
     const [showNewTeamDialog, setShowNewTeamDialog] = useState(false)
     const [selectedAccount, setSelectedAccount] = useState<SelectedAccount | null>(null)
 
-    const {data: accounts} = useAccounts({
-        onSuccess(accounts) {
-            if (accountId && accounts.length > 0) {
-                setSelectedAccount(accounts.find((account) => account.account_id === accountId));
+    const {data: accounts, mutate} = useAccounts({
+        onSuccess: (accounts) => {
+            if (defaultAccountId && accounts && !selectedAccount) {
+                const defaultAccount = accounts.find((account) => account.account_id === defaultAccountId);
+                setSelectedAccount(defaultAccount);
             }
         }
     });
@@ -57,9 +56,21 @@ export default function AccountSelector({ className, accountId, placeholder = "S
 
         return {
             personalAccount,
-            teamAccounts
+            teamAccounts,
         }
     }, [accounts]);
+
+    function handleTeamCreated(account: CreateAccountResponse) {
+        mutate();
+
+        setSelectedAccount(account);
+        setOpen(false);
+        setShowNewTeamDialog(false);
+
+        if (afterTeamCreated) {
+            afterTeamCreated(account);
+        }
+    }
 
     return (
         <Dialog open={showNewTeamDialog} onOpenChange={setShowNewTeamDialog}>
@@ -73,7 +84,7 @@ export default function AccountSelector({ className, accountId, placeholder = "S
                         className={cn("w-[250px] justify-between", className)}
                     >
                         {selectedAccount?.name || placeholder}
-                        <ChevronsUpDownIcon className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                        <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
                     </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-[250px] p-0">
@@ -85,13 +96,16 @@ export default function AccountSelector({ className, accountId, placeholder = "S
                                 <CommandItem
                                     key={personalAccount?.account_id}
                                     onSelect={() => {
+                                        if (onAccountSelected) {
+                                            onAccountSelected(personalAccount)
+                                        }
                                         setSelectedAccount(personalAccount)
                                         setOpen(false)
                                     }}
                                     className="text-sm"
                                 >
                                     {personalAccount?.name}
-                                    <CheckIcon
+                                    <Check
                                         className={cn(
                                             "ml-auto h-4 w-4",
                                             selectedAccount?.account_id === personalAccount?.account_id
@@ -107,13 +121,16 @@ export default function AccountSelector({ className, accountId, placeholder = "S
                                     <CommandItem
                                         key={team.account_id}
                                         onSelect={() => {
+                                            if (onAccountSelected) {
+                                                onAccountSelected(team)
+                                            }
                                             setSelectedAccount(team)
                                             setOpen(false)
                                         }}
                                         className="text-sm"
                                     >
                                         {team.name}
-                                        <CheckIcon
+                                        <Check
                                             className={cn(
                                                 "ml-auto h-4 w-4",
                                                 selectedAccount?.account_id === team.account_id
@@ -136,7 +153,7 @@ export default function AccountSelector({ className, accountId, placeholder = "S
                                             setShowNewTeamDialog(true)
                                         }}
                                     >
-                                        <PlusCircleIcon className="mr-2 h-5 w-5" />
+                                        <PlusCircle className="mr-2 h-5 w-5" />
                                         Create Team
                                     </CommandItem>
                                 </DialogTrigger>
@@ -147,47 +164,12 @@ export default function AccountSelector({ className, accountId, placeholder = "S
             </Popover>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create team</DialogTitle>
+                    <DialogTitle>Create a new team</DialogTitle>
                     <DialogDescription>
-                        Add a new team to manage products and customers.
+                        Create a team to collaborate with others.
                     </DialogDescription>
                 </DialogHeader>
-                <div>
-                    <div className="space-y-4 py-2 pb-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="name">Team name</Label>
-                            <Input id="name" placeholder="Acme Inc." />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="plan">Subscription plan</Label>
-                            <Select>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select a plan" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="free">
-                                        <span className="font-medium">Free</span> -{" "}
-                                        <span className="text-muted-foreground">
-                      Trial for two weeks
-                    </span>
-                                    </SelectItem>
-                                    <SelectItem value="pro">
-                                        <span className="font-medium">Pro</span> -{" "}
-                                        <span className="text-muted-foreground">
-                      $9/month per user
-                    </span>
-                                    </SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </div>
-                <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowNewTeamDialog(false)}>
-                        Cancel
-                    </Button>
-                    <Button type="submit">Continue</Button>
-                </DialogFooter>
+                <NewTeamForm afterCreate={handleTeamCreated} />
             </DialogContent>
         </Dialog>
     )

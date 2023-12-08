@@ -1,9 +1,9 @@
 import {SupabaseClient} from "@supabase/supabase-js";
-import {GET_BILLING_PLANS_RESPONSE} from "@usebasejump/shared";
+import {GetBillingPlansResponse} from "@usebasejump/shared";
 import useSWR, {SWRConfiguration} from "swr";
 
 export const useBillingPlans = (supabaseClient: SupabaseClient, accountId?: string, options?: SWRConfiguration) => {
-    return useSWR<GET_BILLING_PLANS_RESPONSE>(
+    return useSWR<GetBillingPlansResponse>(
         !!supabaseClient && ["billing-plans", accountId],
         async () => {
             if (!supabaseClient) {

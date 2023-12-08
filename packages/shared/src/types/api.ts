@@ -1,12 +1,12 @@
 import {Database} from "./basejump-types";
 
-export type CURRENT_USER_ACCOUNT_ROLE_RESPONSE = {
+export type CurrentUserAccountRoleResponse = {
     account_role: Database["basejump"]["Tables"]["account_user"]["Row"]["account_role"];
     is_primary_owner: boolean;
     is_personal_account: boolean;
 };
 
-export type GET_BILLING_PLANS_RESPONSE = Array<{
+export type GetBillingPlansResponse = Array<{
     id: string;
     name: string;
     description?: string;
@@ -21,7 +21,7 @@ export type GET_BILLING_PLANS_RESPONSE = Array<{
     };
 }>;
 
-export type GET_ACCOUNT_RESPONSE = {
+export type GetAccountResponse = {
     account_id: string;
     role: Database["basejump"]["Tables"]["account_user"]["Row"]["account_role"];
     is_primary_owner: boolean;
@@ -35,10 +35,10 @@ export type GET_ACCOUNT_RESPONSE = {
     };
 };
 
-export type CREATE_ACCOUNT_RESPONSE = GET_ACCOUNT_RESPONSE;
-export type UPDATE_ACCOUNT_RESPONSE = GET_ACCOUNT_RESPONSE;
+export type CreateAccountResponse = GetAccountResponse;
+export type UpdateAccountResponse = GetAccountResponse;
 
-export type GET_ACCOUNTS_RESPONSE = {
+export type GetAccountsResponse = {
     account_id: string;
     role: Database["basejump"]["Tables"]["account_user"]["Row"]["account_role"];
     is_primary_owner: boolean;
@@ -49,24 +49,24 @@ export type GET_ACCOUNTS_RESPONSE = {
     updated_at: Date;
 }[];
 
-export type GET_ACCOUNT_MEMBERS_RESPONSE = {
+export type GetAccountMembersResponse = {
     user_id: string;
     name: string;
     account_role: Database["basejump"]["Tables"]["account_user"]["Row"]["account_role"];
     is_primary_owner: boolean;
 }[];
 
-export type GET_ACCOUNT_INVITES_RESPONSE = {
+export type GetAccountInvitesResponse = {
     account_role: Database["basejump"]["Tables"]["account_user"]["Row"]["account_role"];
     invitation_type: Database["basejump"]["Tables"]["invitations"]["Row"]["invitation_type"];
     created_at: Date;
 }[];
 
-export type CREATE_INVITATION_RESPONSE = {
+export type CreateInvitationResponse = {
     token: string;
 };
 
-export type GET_ACCOUNT_BILLING_STATUS_RESPONSE = {
+export type GetAccountBillingStatusResponse = {
     subscription_id: string;
     subscription_active: boolean;
     status: Database["basejump"]["Tables"]["billing_subscriptions"]["Row"]["status"];
@@ -76,13 +76,13 @@ export type GET_ACCOUNT_BILLING_STATUS_RESPONSE = {
     billing_enabled: boolean;
 };
 
-export type ACCEPT_INVITATION_RESPONSE = {
+export type AcceptInvitationResponse = {
     account_id: string;
     account_role: Database["basejump"]["Tables"]["account_user"]["Row"]["account_role"];
     slug: string;
 };
 
-export type LOOKUP_INVITATION_RESPONSE = {
+export type LookupInvitationResponse = {
     active: boolean;
     account_name: string;
 };

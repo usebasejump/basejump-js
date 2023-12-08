@@ -1,9 +1,9 @@
 import {SupabaseClient} from "@supabase/supabase-js";
-import {GET_ACCOUNT_RESPONSE} from "@usebasejump/shared";
+import {GetAccountResponse} from "@usebasejump/shared";
 import useSWR, {SWRConfiguration} from "swr";
 
 export const useAccount = (supabaseClient: SupabaseClient, accountId: string, options?: SWRConfiguration) => {
-    return useSWR<GET_ACCOUNT_RESPONSE>(
+    return useSWR<GetAccountResponse>(
         !!supabaseClient && !!accountId && ["account", accountId],
         async () => {
             const {data, error} = await supabaseClient.rpc("get_account", {

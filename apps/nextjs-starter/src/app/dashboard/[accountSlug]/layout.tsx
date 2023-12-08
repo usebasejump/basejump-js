@@ -10,9 +10,20 @@ export default async function PersonalAccountDashboard({children, params: {accou
         slug: accountSlug
     });
 
+    const navigation = [
+        {
+            name: 'Overview',
+            href: `/dashboard/${accountSlug}`,
+        },
+        {
+            name: 'Settings',
+            href: `/dashboard/${accountSlug}/settings`
+        }
+    ]
+
     return (
         <>
-            <DashboardHeader accountId={teamAccount.account_id} />
+            <DashboardHeader accountId={teamAccount.account_id} navigation={navigation}/>
 
             {children}
         </>

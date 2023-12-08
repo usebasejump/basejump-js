@@ -16,3 +16,4 @@ export * from "./components/basejump-user-session";
  * No changes to these
  */
 export { SignedOut, SignedIn, useBasejumpSession, useBasejumpClient, useBasejumpProvider } from '@usebasejump/react';
+export * from '@usebasejump/shared';
