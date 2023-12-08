@@ -1,30 +1,26 @@
 "use client";
 
-import {createContext, useContext, useEffect, useMemo, useState} from "react";
+import {createContext, ReactNode, useContext, useEffect, useMemo, useState} from "react";
 import {AuthError, SupabaseClient} from "@supabase/supabase-js";
 import {Session} from "@supabase/auth-helpers-react";
-import {QueryClient} from "@tanstack/react-query";
 
 type Props = {
   supabaseClient: SupabaseClient;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 type BASEJUMP_PROVIDER = {
   supabaseClient: SupabaseClient | null;
-  isLoading: boolean;
+  loading: boolean;
   error: AuthError | null;
   session: null | Session;
-  invitationUrlTemplate?: string;
 };
 const BasejumpContext = createContext<BASEJUMP_PROVIDER | null>({
   supabaseClient: null,
-  isLoading: true,
+  loading: true,
   error: null,
   session: null,
 });
-
-const queryClient = new QueryClient();
 
 export const BasejumpUserSession = ({
   supabaseClient,
@@ -129,7 +125,7 @@ export const useBasejumpSession = () => {
   const context = useContext(BasejumpContext);
   if (context === undefined) {
     throw new Error(
-      "useBasejumpClient must be used within a BasejumpUserSession"
+      "useBasejumpSession must be used within a BasejumpUserSession"
     );
   }
   return context?.session;

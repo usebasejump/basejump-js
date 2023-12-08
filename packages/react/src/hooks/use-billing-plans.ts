@@ -1,13 +1,6 @@
 import {SupabaseClient} from "@supabase/supabase-js";
 import {GET_BILLING_PLANS_RESPONSE} from "@usebasejump/shared";
-import {UseQueryOptions,} from "@tanstack/react-query";
 import useSWR, {SWRConfiguration} from "swr";
-
-type Props = {
-    accountId?: string;
-    supabaseClient?: SupabaseClient<any> | null;
-    options?: UseQueryOptions;
-};
 
 export const useBillingPlans = (supabaseClient: SupabaseClient, accountId?: string, options?: SWRConfiguration) => {
     return useSWR<GET_BILLING_PLANS_RESPONSE>(
