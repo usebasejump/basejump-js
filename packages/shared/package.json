@@ -1,6 +1,6 @@
 {
   "name": "@usebasejump/shared",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
@@ -17,11 +17,7 @@
   "author": "Tiniscule",
   "license": "MIT",
   "devDependencies": {
-    "@supabase/supabase-js": "^2.21.0",
     "tsconfig": "workspace:*",
     "tsup": "^8.0.1"
-  },
-  "peerDependencies": {
-    "@supabase/supabase-js": "^2.21.0"
   }
 }
