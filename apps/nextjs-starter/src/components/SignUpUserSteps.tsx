@@ -1,6 +1,6 @@
 import Link from 'next/link'
 import Step from './Step.tsx'
-import Code from '@/src/components/Code.tsx'
+import Code from '@/components/Code.tsx'
 
 const create = `
 create table notes (
