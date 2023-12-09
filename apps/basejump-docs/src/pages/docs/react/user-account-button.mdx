@@ -185,7 +185,7 @@ yarn add lucide-react
     } from "@/components/ui/dropdown-menu"
     import Link from "next/link";
     import {UserIcon} from "lucide-react";
-    import {createClient} from "@usebasejump/react";
+    import {createClient} from "@/utils/supabase/client.ts";
 
     export default function UserAccountButton() {
         const supabaseClient = createClient();
