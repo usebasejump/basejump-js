@@ -31,39 +31,33 @@ type PopoverTriggerProps = ComponentPropsWithoutRef<typeof PopoverTrigger>;
 type SelectedAccount = ReturnType<typeof useAccounts>["data"][0] | null;
 
 interface AccountSelectorProps extends PopoverTriggerProps {
-    defaultAccountId: string;
+    accountId: string;
     afterTeamCreated?: (account: CreateAccountResponse) => void;
     onAccountSelected?: (account: SelectedAccount) => void;
 }
 
-export default function AccountSelector({ className, defaultAccountId, onAccountSelected, afterTeamCreated, placeholder = "Select an account..." }: AccountSelectorProps) {
+export default function AccountSelector({ className, accountId, onAccountSelected, afterTeamCreated, placeholder = "Select an account..." }: AccountSelectorProps) {
+
     const [open, setOpen] = useState(false)
     const [showNewTeamDialog, setShowNewTeamDialog] = useState(false)
-    const [selectedAccount, setSelectedAccount] = useState<SelectedAccount | null>(null)
 
-    const {data: accounts, mutate} = useAccounts({
-        onSuccess: (accounts) => {
-            if (defaultAccountId && accounts && !selectedAccount) {
-                const defaultAccount = accounts.find((account) => account.account_id === defaultAccountId);
-                setSelectedAccount(defaultAccount);
-            }
-        }
-    });
+    const {data: accounts, mutate} = useAccounts();
 
-    const {teamAccounts, personalAccount} = useMemo(() => {
+    const {teamAccounts, personalAccount, selectedAccount} = useMemo(() => {
         const personalAccount = accounts?.find((account) => account.personal_account);
         const teamAccounts = accounts?.filter((account) => !account.personal_account);
+        const selectedAccount = accounts?.find((account) => account.account_id === accountId);
 
         return {
             personalAccount,
             teamAccounts,
+            selectedAccount,
         }
-    }, [accounts]);
+    }, [accounts, accountId]);
 
     function handleTeamCreated(account: CreateAccountResponse) {
         mutate();
 
-        setSelectedAccount(account);
         setOpen(false);
         setShowNewTeamDialog(false);
 
@@ -99,7 +93,6 @@ export default function AccountSelector({ className, defaultAccountId, onAccount
                                         if (onAccountSelected) {
                                             onAccountSelected(personalAccount)
                                         }
-                                        setSelectedAccount(personalAccount)
                                         setOpen(false)
                                     }}
                                     className="text-sm"
@@ -124,7 +117,8 @@ export default function AccountSelector({ className, defaultAccountId, onAccount
                                             if (onAccountSelected) {
                                                 onAccountSelected(team)
                                             }
-                                            setSelectedAccount(team)
+                                            console.log('setting to team ', team)
+
                                             setOpen(false)
                                         }}
                                         className="text-sm"

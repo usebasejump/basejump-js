@@ -56,14 +56,12 @@ const reactNavigation = [
     {
         title: "UI Components",
         links: [
-            {title: 'UserProfileButton', href: '/docs/react/user-profile-button'},
+            {title: 'UserAccountButton', href: '/docs/react/user-account-button'},
             {title: 'AccountSelector', href: '/docs/react/account-selector'},
-            {title: 'CreateAccountForm', href: '/docs/react/create-account-form'},
-            {title: 'EditAccountForm', href: '/docs/react/edit-account-form'},
+            {title: 'NewTeamForm', href: '/docs/react/new-team-form'},
             {title: 'AcceptInvitationForm', href: '/docs/react/accept-invitation-form'},
             {title: 'InviteMemberForm', href: '/docs/react/invite-member-form'},
             {title: 'InviteMemberButton', href: '/docs/react/invite-member-button'},
-            {title: 'CreateAccountButton', href: '/docs/react/create-account-button'},
         ]
     }
 ];

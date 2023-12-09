@@ -5,9 +5,10 @@ import {cn} from "@/lib/utils";
 type Props = {
   size: "sm" | "lg";
   className?: string;
+  logoOnly?: boolean;
 };
 
-const Logo = ({ size = "sm", className }: Props) => {
+const Logo = ({ size = "sm", className, logoOnly = false }: Props) => {
   const height = size === "sm" ? 40 : 150;
   const width = size === "sm" ? 40 : 150;
   return (
@@ -34,6 +35,7 @@ const Logo = ({ size = "sm", className }: Props) => {
               alt="Basejump Logo"
           />
         </div>
+          {!logoOnly && (
         <h1
             className={cn("font-black", {
               "text-3xl md:text-8xl": size === "lg",
@@ -41,7 +43,7 @@ const Logo = ({ size = "sm", className }: Props) => {
             })}
         >
           Basejump
-        </h1>
+        </h1>)}
       </div>
   );
 };

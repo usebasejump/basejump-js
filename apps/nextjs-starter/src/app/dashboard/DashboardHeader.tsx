@@ -1,10 +1,7 @@
-'use client'
-
 import AccountSelector from "@/components/basejump/AccountSelector";
-import Logo from "@/components/Logo";
 import Link from "next/link";
 import UserAccountButton from "@/components/basejump/UserAccountButton.tsx";
-import {useRouter} from "next/navigation";
+import BasejumpLogo from "@/components/BasejumpLogo.tsx";
 
 
 interface Props {
@@ -15,17 +12,16 @@ interface Props {
     }[]
 }
 export default function DashboardHeader({accountId, navigation = []}: Props) {
-    const router = useRouter();
-    
+
     return (
         <nav className="w-full p-4 flex justify-between items-center border-b">
             <div className="flex justify-start items-center gap-x-4 lg:gap-x-6">
                 <div className="flex items-center gap-x-4">
-                    <Logo />
+                    <BasejumpLogo logoOnly />
                     <span className="border-l rotate-12 h-6" />
                     <AccountSelector
-                        defaultAccountId={accountId}
-                        afterTeamCreated={(account) => router.push(`/dashboard/${account.slug}`)}
+                        accountId={accountId}
+                        afterTeamCreated={(account) => useNavigate(`/dashboard/${account.slug}`)}
                         onAccountSelected={(account) => router.push(account.personal_account ? `/dashboard` : `/dashboard/${account.slug}`)}
                     />
                 </div>
