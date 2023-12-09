@@ -1,12 +1,15 @@
 {
   "name": "@usebasejump/next",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "main": "dist/index.js",
   "module": "dist/index.mjs",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "license": "MIT",
   "scripts": {
     "lint": "tsc --noEmit",
@@ -14,23 +17,22 @@
     "dev": "tsup --watch --clean"
   },
   "peerDependencies": {
-    "@supabase/supabase-js": "^2.21.0",
-    "@supabase/ssr": "^0.0.10"
+    "@supabase/ssr": "^0.0.10",
+    "@supabase/supabase-js": "^2.21.0"
   },
   "dependencies": {
     "@usebasejump/react": "*",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
     "swr": "^2.2.4"
   },
   "devDependencies": {
-    "@supabase/supabase-js": "^2.21.0",
     "@supabase/ssr": "^0.0.10",
+    "@supabase/supabase-js": "^2.21.0",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
     "eslint": "^7.32.0",
     "eslint-config-custom": "*",
-    "react": "^17.0.2",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "tsconfig": "*",
     "tsup": "^8.0.1",
     "typescript": "^4.5.2"
