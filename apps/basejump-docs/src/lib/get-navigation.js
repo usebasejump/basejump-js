@@ -61,7 +61,6 @@ const reactNavigation = [
             {title: 'NewTeamForm', href: '/docs/react/new-team-form'},
             {title: 'AcceptInvitationForm', href: '/docs/react/accept-invitation-form'},
             {title: 'InviteMemberForm', href: '/docs/react/invite-member-form'},
-            {title: 'InviteMemberButton', href: '/docs/react/invite-member-button'},
         ]
     }
 ];

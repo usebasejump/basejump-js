@@ -10,6 +10,33 @@ Shows a form for creating a new team within Basejump. Primarily used within the 
 The `<NewTeamForm />` component is powered by shadcn, meaning the code and all it's components are local to your codebase for easy customization.
 The inspiration for the component design was borrowed heavily from the [shadcn dashboard example app](https://ui.shadcn.com/examples/dashboard).
 
+## Preview
+
+![NewTeamForm](/images/docs/react/new-team-form.png)
+
+## Usage
+This component is nothing but a basic react-hook-form component built using shadcn.  It's made to be used inside of other components, such as the `<AccountSelector>`, but you can also leverage it in your own interfaces.
+
+### Optional parameters
+
+<Properties>
+    <Property name="afterCreate" type="function">
+        A function that gets called after a team has been created. It gets passed the new team as a function input.
+    </Property>
+</Properties>
+
+```jsx
+    import NewTeamForm from "@/components/basejump/NewTeamForm.tsx";
+
+    export default function NewTeamFormDemo() {
+        return (
+            <NewTeamForm afterCreate={(account) => alert(`Welcome, ${account.name}`)}/>
+        )
+    }
+    
+````
+
+
 ## Installation
 
 This assumes that you've followed the [react or nextjs getting started guide](/docs/react) and have a working shadcn installation.
@@ -18,3 +45,209 @@ This assumes that you've followed the [react or nextjs getting started guide](/d
 ```bash
 npx shadcn-ui@latest add form input label button
 ```
+
+### 2. Copy / Paste the `<NewTeamForm />` component into your codebase
+<Note>
+    The **Next.js RSC component** leverages server actions and cannot be embedded inside of other client components. If your app isn't setup for that, use the Client Component instead.
+
+    The **React** component requires that you have a `createClient` method created that returns a Supabase client.
+</Note>
+
+<CodeGroup>
+```jsx {{title: "Next.js", tag: "@/components/basejump/NewTeamForm.tsx"}}
+"use client"
+
+import {zodResolver} from "@hookform/resolvers/zod"
+import {useForm} from "react-hook-form"
+import * as z from "zod"
+
+import {Button} from "@/components/ui/button"
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form"
+import {Input} from "@/components/ui/input"
+import {CreateAccountResponse} from "@usebasejump/next";
+import {createClient} from "@/utils/supabase/client.ts";
+
+const FormSchema = z.object({
+    slug: z.string().min(2, {
+        message: "Account slug must be at least 2 characters.",
+    }),
+    name: z.string().min(2, {
+        message: "Account name must be at least 2 characters.",
+    })
+})
+
+interface Props {
+    afterCreate?: (account: CreateAccountResponse) => void;
+}
+
+export default function NewTeamForm({afterCreate}: Props) {
+    const form = useForm<z.infer<typeof FormSchema>>({
+        resolver: zodResolver(FormSchema),
+        defaultValues: {
+            slug: "",
+            name: "",
+        },
+    });
+
+    const supabaseClient = createClient();
+
+    async function onSubmit(data: z.infer<typeof FormSchema>) {
+        const {data: newTeam, error} = await supabaseClient.rpc("create_account", {
+            name: data.name,
+            slug: data.slug,
+        });
+
+        if (error) {
+            form.setError("slug", {
+                type: "custom",
+                message: error.message,
+            });
+            return;
+        }
+
+        if (afterCreate) {
+            afterCreate(newTeam);
+        }
+
+        form.reset();
+    }
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="name"
+                    render={({field}) => (
+                        <FormItem>
+                            <FormLabel>Team Name</FormLabel>
+                            <FormControl>
+                                <Input placeholder="My Team" {...field} />
+                            </FormControl>
+                            <FormMessage/>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="slug"
+                    render={({field}) => (
+                        <FormItem>
+                            <FormLabel>Unique identifier</FormLabel>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-sm leading-none">
+                                    https://usebasejump.com/
+                                </span>
+                                <FormControl>
+                                    <Input placeholder="my-team" {...field} />
+                                </FormControl>
+                            </div>
+                            <FormMessage/>
+                        </FormItem>
+                    )}
+                />
+                <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? "Creating..." : "Create Team"}</Button>
+            </form>
+        </Form>
+    )
+}
+```
+```jsx {{title: "React", tag: "@/components/basejump/NewTeamForm.tsx"}}
+"use client"
+
+import {zodResolver} from "@hookform/resolvers/zod"
+import {useForm} from "react-hook-form"
+import * as z from "zod"
+
+import {Button} from "@/components/ui/button"
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form"
+import {Input} from "@/components/ui/input"
+import {CreateAccountResponse} from "@usebasejump/react";
+import {createClient} from "@/utils/supabase/client.ts";
+
+const FormSchema = z.object({
+    slug: z.string().min(2, {
+        message: "Account slug must be at least 2 characters.",
+    }),
+    name: z.string().min(2, {
+        message: "Account name must be at least 2 characters.",
+    })
+})
+
+interface Props {
+    afterCreate?: (account: CreateAccountResponse) => void;
+}
+
+export default function NewTeamForm({afterCreate}: Props) {
+    const form = useForm<z.infer<typeof FormSchema>>({
+        resolver: zodResolver(FormSchema),
+        defaultValues: {
+            slug: "",
+            name: "",
+        },
+    });
+
+    const supabaseClient = createClient();
+
+    async function onSubmit(data: z.infer<typeof FormSchema>) {
+        const {data: newTeam, error} = await supabaseClient.rpc("create_account", {
+            name: data.name,
+            slug: data.slug,
+        });
+
+        if (error) {
+            form.setError("slug", {
+                type: "custom",
+                message: error.message,
+            });
+            return;
+        }
+
+        if (afterCreate) {
+            afterCreate(newTeam);
+        }
+
+        form.reset();
+    }
+
+    return (
+        <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                    control={form.control}
+                    name="name"
+                    render={({field}) => (
+                        <FormItem>
+                            <FormLabel>Team Name</FormLabel>
+                            <FormControl>
+                                <Input placeholder="My Team" {...field} />
+                            </FormControl>
+                            <FormMessage/>
+                        </FormItem>
+                    )}
+                />
+                <FormField
+                    control={form.control}
+                    name="slug"
+                    render={({field}) => (
+                        <FormItem>
+                            <FormLabel>Unique identifier</FormLabel>
+                            <div className="flex items-center space-x-2">
+                                <span className="text-sm leading-none">
+                                    https://usebasejump.com/
+                                </span>
+                                <FormControl>
+                                    <Input placeholder="my-team" {...field} />
+                                </FormControl>
+                            </div>
+                            <FormMessage/>
+                        </FormItem>
+                    )}
+                />
+                <Button type="submit" disabled={form.formState.isSubmitting}>{form.formState.isSubmitting ? "Creating..." : "Create Team"}</Button>
+            </form>
+        </Form>
+    )
+}
+```
+</CodeGroup>

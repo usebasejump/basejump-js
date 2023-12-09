@@ -10,11 +10,421 @@ The account select component is a combobox of accounts that the current user bel
 The `<AccountSelector />` component is powered by shadcn, meaning the code and all it components are local to your codebase for easy customization.
 The inspiration for the component design was borrowed heavily from the [shadcn dashboard example app](https://ui.shadcn.com/examples/dashboard).
 
+
+## Preview
+
+![AccountSelector](/images/docs/react/account-selector.png)
+
+## Usage
+<Note>
+**Next.js App Router note**
+Because this function does quite a bit, including creating new teams and handling navigation with existing ones, it has to be done as a client component.
+
+You'll probably want to wrap it in your own client component to handle navigation, similar to the example below.  That way you can keep the bulk of your app in server components if your'e using the Next.js App Router
+</Note>
+### Required parameters
+<Properties>
+    <Property name="accountId" type="uuid">
+        The account ID for the currently selected account. Typically this comes from the URL params.
+    </Property>
+</Properties>
+
+### Optional parameters
+
+<Properties>
+    <Property name="afterTeamCreated" type="function">
+        A function that gets called after a team has been created. It gets passed the new team as a function input.
+    </Property>
+    <Property name="onAccountSelected" type="function">
+        A function that gets called after an account has been selected. The account could be either a personal account OR a team account. It gets passed the account as a function input.
+    </Property>
+</Properties>
+
+```jsx
+    "use client"
+
+    import {useRouter} from 'next/navigation';
+    import AccountSelector from "@/components/basejump/AccountSelector.tsx";
+
+    export default function AccountSelectorDemo({accountId}) {
+        const router = useRouter();
+        return (
+            <AccountSelector 
+                accountId={accountId}
+                afterTeamCreated={(account) => router.push(`/dashboard/${account.slug}`)}
+                onAccountSelected{(account) => router.push(account.personal_account ? '/dashboard' : `/dashboard/${account.slug}`)}
+            />
+        )
+    }
+    
+````
+
+
 ## Installation
 
 This assumes that you've followed the [react or nextjs getting started guide](/docs/react) and have a working shadcn installation.
 
-### 1. Install required shadcn components
+### 1. Install required shadcn components and other dependencies
 ```bash
-npx shadcn-ui@latest add popover command dialog select
+npx shadcn-ui@latest add popover command dialog
+yarn add lucide-react
 ```
+
+### 3. Install the `<NewTeamForm />` component
+
+By default, we expect it to be located at `@/components/basejump/NewTeamForm`, but you can customize the code below for any location. [Follow the directions here](/docs/react/new-team-form)
+
+### 2. Copy / Paste the `<AccountSelector />` component into your codebase
+<Note>
+    The **React** component requires that you have a `createClient` method created that returns a Supabase client.
+</Note>
+
+<CodeGroup>
+```jsx {{title: "Next.js", tag: "@/components/basejump/AccountSelector.tsx"}}
+"use client"
+
+import {ComponentPropsWithoutRef, useMemo, useState} from "react"
+import {Check, ChevronsUpDown, PlusCircle,} from "lucide-react";
+
+import {cn} from "@/lib/utils.ts"
+import {Button} from "@/components/ui/button"
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandSeparator,
+} from "@/components/ui/command"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover"
+import {CreateAccountResponse, useAccounts} from "@usebasejump/next";
+import NewTeamForm from "@/components/basejump/NewTeamForm.tsx";
+
+type PopoverTriggerProps = ComponentPropsWithoutRef<typeof PopoverTrigger>;
+
+type SelectedAccount = ReturnType<typeof useAccounts>["data"][0] | null;
+
+interface AccountSelectorProps extends PopoverTriggerProps {
+    accountId: string;
+    afterTeamCreated?: (account: CreateAccountResponse) => void;
+    onAccountSelected?: (account: SelectedAccount) => void;
+}
+
+export default function AccountSelector({ className, accountId, onAccountSelected, afterTeamCreated, placeholder = "Select an account..." }: AccountSelectorProps) {
+
+    const [open, setOpen] = useState(false)
+    const [showNewTeamDialog, setShowNewTeamDialog] = useState(false)
+
+    const {data: accounts, mutate} = useAccounts();
+
+    const {teamAccounts, personalAccount, selectedAccount} = useMemo(() => {
+        const personalAccount = accounts?.find((account) => account.personal_account);
+        const teamAccounts = accounts?.filter((account) => !account.personal_account);
+        const selectedAccount = accounts?.find((account) => account.account_id === accountId);
+
+        return {
+            personalAccount,
+            teamAccounts,
+            selectedAccount,
+        }
+    }, [accounts, accountId]);
+
+    function handleTeamCreated(account: CreateAccountResponse) {
+        mutate();
+
+        setOpen(false);
+        setShowNewTeamDialog(false);
+
+        if (afterTeamCreated) {
+            afterTeamCreated(account);
+        }
+    }
+
+    return (
+        <Dialog open={showNewTeamDialog} onOpenChange={setShowNewTeamDialog}>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        aria-label="Select a team"
+                        className={cn("w-[250px] justify-between", className)}
+                    >
+                        {selectedAccount?.name || placeholder}
+                        <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[250px] p-0">
+                    <Command>
+                        <CommandList>
+                            <CommandInput placeholder="Search account..." />
+                            <CommandEmpty>No account found.</CommandEmpty>
+                            <CommandGroup heading="Personal Account">
+                                <CommandItem
+                                    key={personalAccount?.account_id}
+                                    onSelect={() => {
+                                        if (onAccountSelected) {
+                                            onAccountSelected(personalAccount)
+                                        }
+                                        setOpen(false)
+                                    }}
+                                    className="text-sm"
+                                >
+                                    {personalAccount?.name}
+                                    <Check
+                                        className={cn(
+                                            "ml-auto h-4 w-4",
+                                            selectedAccount?.account_id === personalAccount?.account_id
+                                                ? "opacity-100"
+                                                : "opacity-0"
+                                        )}
+                                    />
+                                </CommandItem>
+                            </CommandGroup>
+                            {teamAccounts?.length > 0 && (
+                            <CommandGroup heading="Teams">
+                                {teamAccounts.map((team) => (
+                                    <CommandItem
+                                        key={team.account_id}
+                                        onSelect={() => {
+                                            if (onAccountSelected) {
+                                                onAccountSelected(team)
+                                            }
+                                            console.log('setting to team ', team)
+
+                                            setOpen(false)
+                                        }}
+                                        className="text-sm"
+                                    >
+                                        {team.name}
+                                        <Check
+                                            className={cn(
+                                                "ml-auto h-4 w-4",
+                                                selectedAccount?.account_id === team.account_id
+                                                    ? "opacity-100"
+                                                    : "opacity-0"
+                                            )}
+                                        />
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                            )}
+                        </CommandList>
+                        <CommandSeparator />
+                        <CommandList>
+                            <CommandGroup>
+                                <DialogTrigger asChild>
+                                    <CommandItem
+                                        onSelect={() => {
+                                            setOpen(false)
+                                            setShowNewTeamDialog(true)
+                                        }}
+                                    >
+                                        <PlusCircle className="mr-2 h-5 w-5" />
+                                        Create Team
+                                    </CommandItem>
+                                </DialogTrigger>
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Create a new team</DialogTitle>
+                    <DialogDescription>
+                        Create a team to collaborate with others.
+                    </DialogDescription>
+                </DialogHeader>
+                <NewTeamForm afterCreate={handleTeamCreated} />
+            </DialogContent>
+        </Dialog>
+    )
+}
+```
+```jsx {{title: "React", tag: "@/components/basejump/AccountSelector.tsx"}}
+"use client"
+
+import {ComponentPropsWithoutRef, useMemo, useState} from "react"
+import {Check, ChevronsUpDown, PlusCircle,} from "lucide-react";
+
+import {cn} from "@/lib/utils.ts"
+import {Button} from "@/components/ui/button"
+import {
+    Command,
+    CommandEmpty,
+    CommandGroup,
+    CommandInput,
+    CommandItem,
+    CommandList,
+    CommandSeparator,
+} from "@/components/ui/command"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
+import {Popover, PopoverContent, PopoverTrigger,} from "@/components/ui/popover"
+import {CreateAccountResponse, useAccounts} from "@usebasejump/react";
+import NewTeamForm from "@/components/basejump/NewTeamForm.tsx";
+import {createClient} from "@/utils/supabase/client.ts";
+
+
+type PopoverTriggerProps = ComponentPropsWithoutRef<typeof PopoverTrigger>;
+
+type SelectedAccount = ReturnType<typeof useAccounts>["data"][0] | null;
+
+interface AccountSelectorProps extends PopoverTriggerProps {
+    accountId: string;
+    afterTeamCreated?: (account: CreateAccountResponse) => void;
+    onAccountSelected?: (account: SelectedAccount) => void;
+}
+
+export default function AccountSelector({ className, accountId, onAccountSelected, afterTeamCreated, placeholder = "Select an account..." }: AccountSelectorProps) {
+
+    const [open, setOpen] = useState(false)
+    const [showNewTeamDialog, setShowNewTeamDialog] = useState(false)
+
+    const supabaseClient = createClient();
+    const {data: accounts, mutate} = useAccounts(supabaseClient);
+
+    const {teamAccounts, personalAccount, selectedAccount} = useMemo(() => {
+        const personalAccount = accounts?.find((account) => account.personal_account);
+        const teamAccounts = accounts?.filter((account) => !account.personal_account);
+        const selectedAccount = accounts?.find((account) => account.account_id === accountId);
+
+        return {
+            personalAccount,
+            teamAccounts,
+            selectedAccount,
+        }
+    }, [accounts, accountId]);
+
+    function handleTeamCreated(account: CreateAccountResponse) {
+        mutate();
+
+        setOpen(false);
+        setShowNewTeamDialog(false);
+
+        if (afterTeamCreated) {
+            afterTeamCreated(account);
+        }
+    }
+
+    return (
+        <Dialog open={showNewTeamDialog} onOpenChange={setShowNewTeamDialog}>
+            <Popover open={open} onOpenChange={setOpen}>
+                <PopoverTrigger asChild>
+                    <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={open}
+                        aria-label="Select a team"
+                        className={cn("w-[250px] justify-between", className)}
+                    >
+                        {selectedAccount?.name || placeholder}
+                        <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+                    </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[250px] p-0">
+                    <Command>
+                        <CommandList>
+                            <CommandInput placeholder="Search account..." />
+                            <CommandEmpty>No account found.</CommandEmpty>
+                            <CommandGroup heading="Personal Account">
+                                <CommandItem
+                                    key={personalAccount?.account_id}
+                                    onSelect={() => {
+                                        if (onAccountSelected) {
+                                            onAccountSelected(personalAccount)
+                                        }
+                                        setOpen(false)
+                                    }}
+                                    className="text-sm"
+                                >
+                                    {personalAccount?.name}
+                                    <Check
+                                        className={cn(
+                                            "ml-auto h-4 w-4",
+                                            selectedAccount?.account_id === personalAccount?.account_id
+                                                ? "opacity-100"
+                                                : "opacity-0"
+                                        )}
+                                    />
+                                </CommandItem>
+                            </CommandGroup>
+                            {teamAccounts?.length > 0 && (
+                            <CommandGroup heading="Teams">
+                                {teamAccounts.map((team) => (
+                                    <CommandItem
+                                        key={team.account_id}
+                                        onSelect={() => {
+                                            if (onAccountSelected) {
+                                                onAccountSelected(team)
+                                            }
+                                            console.log('setting to team ', team)
+
+                                            setOpen(false)
+                                        }}
+                                        className="text-sm"
+                                    >
+                                        {team.name}
+                                        <Check
+                                            className={cn(
+                                                "ml-auto h-4 w-4",
+                                                selectedAccount?.account_id === team.account_id
+                                                    ? "opacity-100"
+                                                    : "opacity-0"
+                                            )}
+                                        />
+                                    </CommandItem>
+                                ))}
+                            </CommandGroup>
+                            )}
+                        </CommandList>
+                        <CommandSeparator />
+                        <CommandList>
+                            <CommandGroup>
+                                <DialogTrigger asChild>
+                                    <CommandItem
+                                        onSelect={() => {
+                                            setOpen(false)
+                                            setShowNewTeamDialog(true)
+                                        }}
+                                    >
+                                        <PlusCircle className="mr-2 h-5 w-5" />
+                                        Create Team
+                                    </CommandItem>
+                                </DialogTrigger>
+                            </CommandGroup>
+                        </CommandList>
+                    </Command>
+                </PopoverContent>
+            </Popover>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Create a new team</DialogTitle>
+                    <DialogDescription>
+                        Create a team to collaborate with others.
+                    </DialogDescription>
+                </DialogHeader>
+                <NewTeamForm afterCreate={handleTeamCreated} />
+            </DialogContent>
+        </Dialog>
+    )
+}
+```
+</CodeGroup>
