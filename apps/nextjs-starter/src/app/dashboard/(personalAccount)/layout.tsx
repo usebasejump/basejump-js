@@ -15,10 +15,6 @@ export default async function PersonalAccountDashboard({children}) {
             href: '/dashboard',
         },
         {
-            name: 'Teams',
-            href: '/dashboard/teams',
-        },
-        {
             name: 'Settings',
             href: '/dashboard/settings'
         }
@@ -27,8 +23,7 @@ export default async function PersonalAccountDashboard({children}) {
     return (
         <>
             <DashboardHeader accountId={personalAccount.account_id} navigation={navigation} />
-
-            {children}
+            <div className="w-full p-8">{children}</div>
         </>
     )
 

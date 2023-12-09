@@ -24,8 +24,7 @@ export default async function PersonalAccountDashboard({children, params: {accou
     return (
         <>
             <DashboardHeader accountId={teamAccount.account_id} navigation={navigation}/>
-
-            {children}
+            <div className="w-full p-8">{children}</div>
         </>
     )
 

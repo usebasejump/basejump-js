@@ -1,7 +1,7 @@
-import AccountSelector from "@/components/basejump/AccountSelector";
 import Link from "next/link";
-import UserAccountButton from "@/components/basejump/UserAccountButton.tsx";
-import BasejumpLogo from "@/components/BasejumpLogo.tsx";
+import UserAccountButton from "@/components/basejump/UserAccountButton";
+import BasejumpLogo from "@/components/BasejumpLogo";
+import NavigatingAccountSelector from "@/app/dashboard/NavigatingAccountSelector";
 
 
 interface Props {
@@ -19,17 +19,13 @@ export default function DashboardHeader({accountId, navigation = []}: Props) {
                 <div className="flex items-center gap-x-4">
                     <BasejumpLogo logoOnly />
                     <span className="border-l rotate-12 h-6" />
-                    <AccountSelector
-                        accountId={accountId}
-                        afterTeamCreated={(account) => useNavigate(`/dashboard/${account.slug}`)}
-                        onAccountSelected={(account) => router.push(account.personal_account ? `/dashboard` : `/dashboard/${account.slug}`)}
-                    />
+                    <NavigatingAccountSelector accountId={accountId} />
                 </div>
-            {navigation.map((navItem) => (
+                {navigation.map((navItem) => (
                     <Link key={navItem.name} href={navItem.href} className="text-sm font-medium transition-colors hover:text-primary">
                         {navItem.name}
                     </Link>
-            ))}
+                ))}
             </div>
 
             <div className="flex items-center gap-x-4">
