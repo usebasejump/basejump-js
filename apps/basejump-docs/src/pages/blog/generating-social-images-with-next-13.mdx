@@ -1,0 +1,128 @@
+export const meta = {
+    title: "Generating Social Images with Next 13",
+    published: "2022-10-25",
+    description: "Learn how to generate automatic social images for your Next 13 blog posts",
+    category: 'NextJS'
+}
+
+We've just released an upgrade to Basejump that bumps NextJS to version 13.  As part of the release, Vercel added support for automatic social image generation using edge functions.  That means you'll get a nice image pulled in whenever you post content to Twitter, Facebook, etc... It seemed pretty cool, so I wanted to give it a whirl for Basejump.
+
+The starter kit now includes a basic social image generator for both documentation and blog posts. I recommend customizing it a bit for your use case, here's what I did for our content site (generated live):
+
+![Generate Social Image for Basejump](https://usebasejump.com/api/og?title=There's%20always%20money%20in%20the%20banana%20stand%20)
+
+It's pretty straight forward to do this, so here's a quick rundown.
+
+## Create an image generating edge function
+First up, you'll need to get the api path setup for generating images.  To do this, we'll pull in the `@vercel/og` package:
+
+```bash
+yarn add @vercel/og
+```
+
+Next, create your API route.  I made mine at `/pages/api/og.tsx`.  Note the `.tsx` extension, we'll be generating HTML here so that's important.
+
+```typescript
+import { ImageResponse } from "@vercel/og";
+import { NextRequest } from "next/server";
+
+export const config = {
+  runtime: "experimental-edge",
+};
+
+export default function (req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url);
+
+    const hasTitle = searchParams.has("title");
+    const title = hasTitle
+      ? searchParams.get("title")?.slice(0, 100)
+      : "Basejump";
+    return new ImageResponse(
+      (
+        <div
+          style={{
+            fontSize: 80,
+            color: "white",
+            fontWeight: "bolder",
+            background:
+              "linear-gradient(117deg, rgba(2,0,36,1) 0%, rgba(9,9,121,1) 100%)",
+            width: "100%",
+            height: "100%",
+            display: "flex",
+            padding: 60,
+            flexDirection: "column",
+            justifyContent: hasTitle ? "space-between" : "center",
+            alignItems: "center",
+          }}
+        >
+          {hasTitle && (
+            <div
+              style={{
+                fontWeight: "bolder",
+              }}
+            >
+              {title}
+            </div>
+          )}
+          <div
+            style={{
+              width: "100%",
+              display: "flex",
+              fontWeight: 800,
+              justifyContent: hasTitle ? "flex-end" : "center",
+              alignItems: "center",
+              alignContent: hasTitle ? "flex-end" : "center",
+            }}
+          >
+            <img
+              width="150"
+              height="150"
+              src={`https://your-url-here.com/images/logo.png`}
+              style={{
+                borderRadius: 128,
+                marginRight: "1rem",
+              }}
+            />
+            Basejump
+          </div>
+        </div>
+      ),
+      {
+        width: 1200,
+        height: 600,
+      }
+    );
+  } catch (e) {
+    console.log(`${e.message}`);
+    return new Response(`Failed to generate an image`, {
+      status: 500,
+    });
+  }
+}
+
+```
+
+A couple things to point out here.
+
+First, I'm accepting a title tag as a URL param.  When one is included, it'll format the image with a logo on the bottom right and the title centered up top.  If a title is not sent, it'll just center the logo in the middle of the image.
+
+Next, I've added a quick CSS gradient for the background. The `@vercel/og` package gives you access to most CSS functionality, so there's a lot you can do here.  I can't remember how to generate CSS gradients to save my soul, so I used [cssgradient.io](https://cssgradient.io/).
+
+## Adding your social images
+Once that's done, you'll just need to pull in your social images on relevant pages.  To do that, you'll add the following meta tags to your header:
+
+```typescript
+<Head>
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="description" content={description} key="desc" />
+  <meta property="og:title" content={title} />
+  <meta name="twitter:title" content={title} />
+  <meta property="og:description" content={description} />
+  <meta name="twitter:description" content={description} />
+  <meta property="og:image" content={`https://your-url-here/api/og?title=${title}`} />
+  <meta name="twitter:image" content={`https://your-url-here/api/og?title=${title}`} />
+</Head>
+```
+
+That's it, all done!

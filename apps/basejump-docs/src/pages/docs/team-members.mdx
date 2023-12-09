@@ -1,0 +1,105 @@
+import {Properties, Property} from "@/components/mdx.jsx";
+export const description =
+    'API endpoints for managing account team members in Supabase with Basejump'
+
+# Team members
+
+Team accounts allow you to invite other users to access your account. Members can be assigned different roles, which control what they can do within the account.
+
+## The team member model
+
+Not all endpoints return all account data - particularly around billing as that can require additinoal calls to third parties to verify. Below is a breakdown of fields you can expect to get back when interacting with accounts.
+
+### Properties
+
+<Properties>
+    <Property name="user_id" type="uuid">
+        Unique identifier for a user.
+    </Property>
+    <Property name="account_role" type="string">
+        The current user's role within the account. Typically `member` or `owner`.
+    </Property>
+    <Property name="is_primary_owner" type="boolean">
+        Tells you if the current user is the primary owner of the account.
+    </Property>
+    <Property name="name" type="string">
+        The name of the user
+    </Property>
+    <Property name="email" type="string">
+        The email address of the user
+    </Property>
+</Properties>
+
+---
+
+## List all members {{ tag: 'POST', label: '/rpc/get_account_members' }}
+
+<Row>
+    <Col>
+        Returns a list of all members on a given account.
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                Unique UUID for the account you're trying to lookup
+            </Property>
+        </Properties>
+
+        ### Optional attributes
+        <Properties>
+            <Property name="results_limit" type="integer">
+                Limit the number of results returned. Default is 50.
+            </Property>
+            <Property name="results_offset" type="integer">
+                Offset the results returned. Default is 0.
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/get_account_members">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/rest/v1/rpc/get_account_members \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"account_id": "uuid"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('get_account_members', {
+                account_id: "uuid"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="get_account_members", params = {
+                "account_id": "uuid"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        [
+            {
+                "user_id": "uuid",
+                "account_role": "member",
+                "is_primary_owner": true,
+                "name": "Frank Smith",
+                "email": "test@test.com"
+            },
+            ...
+        ]
+        ```
+    </Col>
+</Row>

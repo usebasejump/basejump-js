@@ -1,0 +1,541 @@
+export const meta = {
+    title: 'Hooks - React',
+    description: 'React hooks for loading Basejump data',
+};
+
+# Data loading hooks
+Basejump provides some convenience hooks for loading data in client components. Under the hood, hooks use [SWR](https://swr.vercel.app/), so the response will be the standard SWR hook response object.
+
+
+## useAccount
+Returns a given account.
+
+### Required attributes
+
+<Properties>
+    <Property name="accountId" type="uuid">
+        Unique UUID for the account you're trying to lookup
+    </Property>
+</Properties>
+
+<br /><br />
+
+<Row>
+    <Col>
+
+        <CodeGroup title="useAccount">
+
+            ```jsx {{title: 'Next.js'}}
+            import { useAccount } from '@usebasejump/next';
+
+            export function MyComponent({accountId}) {
+                const {data, error, isLoading} = useAccount(accountId);
+
+                return (
+                    <h1>Hello {data?.name}</h1>
+                )
+            };
+
+            ```
+            ```jsx {{title: 'React'}}
+            import { useAccount } from '@usebasejump/react';
+            import { createClient } from '@supabase/supabase-js';
+
+            export function MyComponent({accountId}) {
+                const supabaseClient = createClient('https://my-project.supabase.co', 'public-anon-key');
+                const {data} = useAccount(supabaseClient, accountId);
+
+                return (
+                    <h1>Hello {data?.name}</h1>
+                )
+            };
+
+            ```
+
+        </CodeGroup>
+
+    </Col>
+    <Col sticky>
+
+        ```json {{title: 'data'}}
+        {
+            "account_id": "uuid",
+            "account_role": "owner",
+            "is_primary_owner": true,
+            "name": "Your Team",
+            "slug": "your-team",
+            "personal_account": false,
+            "billing_enabled": true,
+            "billing_status": "active",
+            "created_at": "timestamp",
+            "updated_at": "timestamp",
+            "metadata": {
+                "your_field": "your_value"
+            }
+        }
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## usePersonalAccount
+
+Returns the current user's personal account.
+
+<br /><br />
+
+<Row>
+    <Col>
+
+        <CodeGroup title="usePersonalAccount">
+
+            ```jsx {{title: 'Next.js'}}
+            import { usePersonalAccount } from '@usebasejump/next';
+
+            export function MyComponent() {
+                const {data, error, isLoading} = usePersonalAccount();
+
+                return (
+                    <h1>Hello {data?.name}</h1>
+                )
+            };
+
+            ```
+            ```jsx {{title: 'React'}}
+            import { usePersonalAccount } from '@usebasejump/react';
+            import { createClient } from '@supabase/supabase-js';
+
+            export function MyComponent() {
+                const supabaseClient = createClient('https://my-project.supabase.co', 'public-anon-key');
+                const {data} = usePersonalAccount(supabaseClient);
+
+                return (
+                    <h1>Hello {data?.name}</h1>
+                )
+            };
+
+            ```
+
+        </CodeGroup>
+
+    </Col>
+    <Col sticky>
+
+        ```json {{title: 'data'}}
+        {
+            "account_id": "uuid",
+            "account_role": "owner",
+            "is_primary_owner": true,
+            "name": "Your Team",
+            "slug": "your-team",
+            "personal_account": true,
+            "billing_enabled": true,
+            "billing_status": "active",
+            "created_at": "timestamp",
+            "updated_at": "timestamp",
+            "metadata": {
+                "your_field": "your_value"
+            }
+        }
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## useAccounts
+
+Returns a list of accounts that the current user is a member of, **including their personal account.**
+
+<br /><br />
+
+<Row>
+    <Col>
+
+        <CodeGroup title="useAccounts">
+
+            ```jsx {{title: 'Next.js'}}
+            import { useAccounts } from '@usebasejump/next';
+
+            export function MyComponent() {
+                const {data, error, isLoading} = useAccounts();
+
+                return (
+                    <h1>Currently have {data?.length} accounts</h1>
+                )
+            };
+
+            ```
+            ```jsx {{title: 'React'}}
+            import { useAccounts } from '@usebasejump/react';
+            import { createClient } from '@supabase/supabase-js';
+
+            export function MyComponent() {
+                const supabaseClient = createClient('https://my-project.supabase.co', 'public-anon-key');
+                const {data} = useAccounts(supabaseClient);
+
+                return (
+                    <h1>Currently have {data?.length} accounts</h1>
+                )
+            };
+
+            ```
+
+        </CodeGroup>
+
+    </Col>
+    <Col sticky>
+
+        ```json {{title: 'data'}}
+        [
+            {
+                "account_id": "uuid",
+                "account_role": "member",
+                "is_primary_owner": true,
+                "name": "Team name",
+                "slug": "team-slug",
+                "personal_account": true,
+                "created_at": "timestamp",
+                "updated_at": "timestamp",
+            },
+            ...
+        ]
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## useAccountMembers
+
+Returns a list of members for a given account ID
+
+### Required attributes
+
+<Properties>
+    <Property name="accountId" type="uuid">
+        Unique UUID for the account you're trying to lookup
+    </Property>
+</Properties>
+
+<br /><br />
+
+<Row>
+    <Col>
+
+        <CodeGroup title="useAccountMembers">
+
+            ```jsx {{title: 'Next.js'}}
+            import { useAccountMembers } from '@usebasejump/next';
+
+            export function MyComponent({accountId}) {
+                const {data, error, isLoading} = useAccountMembers(accountId);
+
+                return (
+                    <h1>Currently have {data?.length} members</h1>
+                )
+            };
+
+            ```
+            ```jsx {{title: 'React'}}
+            import { useAccountMembers } from '@usebasejump/react';
+            import { createClient } from '@supabase/supabase-js';
+
+            export function MyComponent({accountId}) {
+                const supabaseClient = createClient('https://my-project.supabase.co', 'public-anon-key');
+                const {data} = useAccountMembers(supabaseClient, accountId);
+
+                return (
+                    <h1>Currently have {data?.length} members</h1>
+                )
+            };
+
+            ```
+
+        </CodeGroup>
+    </Col>
+    <Col sticky>
+
+        ```json {{title: 'data'}}
+        [
+            {
+                "user_id": "uuid",
+                "account_role": "member",
+                "is_primary_owner": true,
+                "name": "Frank Smith",
+                "email": "test@test.com"
+            },
+            ...
+        ]
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## useAccountInvitations
+
+Returns a list of current invitations for a given account ID
+
+### Required attributes
+
+<Properties>
+    <Property name="accountId" type="uuid">
+        Unique UUID for the account you're trying to lookup
+    </Property>
+</Properties>
+
+<br /><br />
+
+<Row>
+    <Col>
+
+        <CodeGroup title="useAccountInvitations">
+
+            ```jsx {{title: 'Next.js'}}
+            import { useAccountInvitations } from '@usebasejump/next';
+
+            export function MyComponent({accountId}) {
+                const {data, error, isLoading} = useAccountInvitations(accountId);
+
+                return (
+                    <h1>Currently have {data?.length} invitations</h1>
+                );
+            };
+            ```
+            ```jsx {{title: 'React'}}
+            import { useAccountInvitations } from '@usebasejump/react';
+            import { createClient } from '@supabase/supabase-js';
+
+            export function MyComponent({accountId}) {
+                const supabaseClient = createClient('https://my-project.supabase.co', 'public-anon-key');
+                const {data} = useAccountInvitations(supabaseClient, accountId);
+
+                return (
+                    <h1>Currently have {data?.length} invitations</h1>
+                );
+            };
+
+            ```
+
+        </CodeGroup>
+    </Col>
+    <Col sticky>
+
+        ```json {{title: 'data'}}
+        [
+            {
+                "account_role": "member",
+                "created_at": "timestamp",
+                "invitation_type": "24_hour",
+                "invitation_id": "uuid"
+            },
+            ...
+        ]
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## useAccountBillingStatus
+
+Returns the current billing status for a given account ID. This hits the actual provider so you'll get up to date information.
+
+### Required attributes
+
+<Properties>
+    <Property name="accountId" type="uuid">
+        Unique UUID for the account you're trying to lookup
+    </Property>
+</Properties>
+
+<br /><br />
+
+<Row>
+    <Col>
+
+        <CodeGroup title="useAccountBillingStatus">
+
+            ```jsx {{title: 'Next.js'}}
+            import { useAccountBillingStatus } from '@usebasejump/next';
+
+            export function MyComponent({accountId}) {
+                const {data, error, isLoading} = useAccountBillingStatus(accountId);
+
+                return (
+                    <h1>Current status is {data?.status}</h1>
+                );
+            };
+            ```
+            ```jsx {{title: 'React'}}
+            import { useAccountBillingStatus } from '@usebasejump/react';
+            import { createClient } from '@supabase/supabase-js';
+
+            export function MyComponent({accountId}) {
+                const supabaseClient = createClient('https://my-project.supabase.co', 'public-anon-key');
+                const {data} = useAccountBillingStatus(supabaseClient, accountId);
+
+                return (
+                    <h1>Current status is {data?.status}</h1>
+                );
+            };
+
+            ```
+
+        </CodeGroup>
+    </Col>
+    <Col sticky>
+
+        ```json {{title: 'data'}}
+        {
+            "subscription_id": "vendor_subscription_id",
+            "subscription_active": true,
+            "status": "active",
+            "billing_email": "your@email.com",
+            "account_role": "owner",
+            "is_primary_owner": true,
+            "billing_enabled": true,
+        }
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## useAccountInvitationLookup
+
+Returns the current billing status for a given account ID. This hits the actual provider so you'll get up to date information.
+
+### Required attributes
+
+<Properties>
+    <Property name="token" type="string">
+        Unique invitation token you want to lookup
+    </Property>
+</Properties>
+
+<br /><br />
+
+<Row>
+    <Col>
+
+        <CodeGroup title="useAccountInvitationLookup">
+
+            ```jsx {{title: 'Next.js'}}
+            import { useAccountInvitationLookup } from '@usebasejump/next';
+
+            export function MyComponent({token}) {
+                const {data, error, isLoading} = useAccountInvitationLookup(token);
+
+                return (
+                    <h1>You've been invited to join {data?.name}</h1>
+                );
+            };
+            ```
+            ```jsx {{title: 'React'}}
+            import { useAccountInvitationLookup } from '@usebasejump/react';
+            import { createClient } from '@supabase/supabase-js';
+
+            export function MyComponent({token}) {
+                const supabaseClient = createClient('https://my-project.supabase.co', 'public-anon-key');
+                const {data} = useAccountInvitationLookup(supabaseClient, token);
+
+                return (
+                    <h1>You've been invited to join {data?.name}</h1>
+                );
+            };
+
+            ```
+
+        </CodeGroup>
+    </Col>
+    <Col sticky>
+
+        ```json {{title: 'data'}}
+        {
+            "name": "Your Team",
+            "active": true
+        }
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## useBillingPlans
+
+Returns the current billing status for a given account ID. This hits the actual provider so you'll get up to date information.
+
+### Optional attributes
+
+<Properties>
+    <Property name="accountId" type="string">
+        Unique account ID you want to lookup plans for. If sent, the response will indicate which plan is currently selected.
+    </Property>
+</Properties>
+
+<br /><br />
+
+<Row>
+    <Col>
+
+        <CodeGroup title="useBillingPlans">
+
+            ```jsx {{title: 'Next.js'}}
+            import { useBillingPlans } from '@usebasejump/next';
+
+            export function MyComponent({accountId}) {
+                const {data, error, isLoading} = useBillingPlans(accountId);
+
+                return (
+                    <h1>Select from {data?.length} plans</h1>
+                );
+            };
+            ```
+            ```jsx {{title: 'React'}}
+            import { useBillingPlans } from '@usebasejump/react';
+            import { createClient } from '@supabase/supabase-js';
+
+            export function MyComponent({accountId}) {
+                const supabaseClient = createClient('https://my-project.supabase.co', 'public-anon-key');
+                const {data} = useBillingPlans(supabaseClient, accountId);
+
+                return (
+                    <h1>Select from {data?.length} plans</h1>
+                );
+            };
+
+            ```
+
+        </CodeGroup>
+    </Col>
+    <Col sticky>
+
+        ```json {{title: 'data'}}
+        [
+            {
+                "id": "vendor_plan_id",
+                "name": "Plan name",
+                "description": "Your plan description",
+                "amount": 1000,
+                "currency": "usd",
+                "interval": "month" | "year" | "one_time",
+                "interval_count": 1,
+                "trial_period_days": 30,
+                "active": false
+            },
+            ...
+        ]
+        ```
+
+    </Col>
+</Row>

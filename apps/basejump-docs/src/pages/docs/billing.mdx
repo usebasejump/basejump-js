@@ -1,0 +1,414 @@
+import {Note, Properties, Property} from "@/components/mdx.jsx";
+export const description =
+    'API endpoints for managing account billing and subscriptions in Supabase with Basejump'
+
+# Billing
+
+If you're just looking for the latest cached billing status, you can use the `get_account` call.
+
+These billing specific functions will force an upstream billing provider API hit to load fresh data. Also useful for generating billing dashboard links for updating payment methods or changing your subscription plan.
+
+<Note>
+    To make implementation simpler, **all billing functions are nested under one endpoint**.  Individual function calls are handled by passing the function name to the `billing-functions` endpoint
+</Note>
+
+## Making billing function calls
+Because billing functions share an endpoint, you need to pass through the action to take as well as any arguments for the function.
+
+<CodeGroup title="Making requests" tag="POST" label="/billing-functions">
+    ```json {{title: 'Request body'}}
+    {
+        "action": "get_plans",
+        "args": {
+            "account_id": "uuid"
+        }
+    }
+    ```
+</CodeGroup>
+
+
+
+---
+
+## Get plans {{ tag: 'ACTION', label: 'get_plans' }}
+
+<Row>
+    <Col>
+
+        Returns all the available subscription plans for the given account.  The currently selected plan will be indicated.
+
+        ### Optional attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                UUID for the account you're trying to lookup available plans for. If an account_id is passed, the response will indicate which plan has been selected
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="ACTION" label="get_plans">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/billing-functions \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"action": "get_plans", "args": {"account_id": "uuid"}}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.functions.invoke('current_user_account_role', {
+                body: {
+                    action: "get_plans",
+                    args: {
+                        account_id: "uuid"
+                    }
+                }
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            func = supabase.functions()
+
+            @asyncio.coroutine
+            async def run_func(loop):
+                resp = await func.invoke("billing_functions",invoke_options={'body':{
+                    "action": "get_plans",
+                    "args": {
+                        "account_id": "uuid"
+                    }
+                }})
+                return resp
+
+            loop = asyncio.get_event_loop()
+            resp = loop.run_until_complete(run_func(loop))
+            loop.close()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        [
+            {
+                "id": "vendor_plan_id",
+                "name": "Plan name",
+                "description": "Your plan description",
+                "amount": 1000,
+                "currency": "usd",
+                "interval": "month" | "year" | "one_time",
+                "interval_count": 1,
+                "trial_period_days": 30,
+                "active": false
+            },
+            ...
+        ]
+        ```
+    </Col>
+</Row>
+
+---
+
+## Billing status {{ tag: 'ACTION', label: 'get_billing_status' }}
+
+<Row>
+    <Col>
+
+        Returns the current billing status for the given account.  This includes the currently selected plan, subscription status, etc...
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                Unique UUID for the account you're trying to lookup
+            </Property>
+        </Properties>
+
+        ### Possible Statuses
+        - `active` - The account has an active subscription
+        - `trialing` - The account is in a trial period
+        - `past_due` - The account has a past due invoice
+        - `canceled` - The account has canceled their subscription
+        - `unpaid` - The account has an unpaid invoice
+        - `incomplete` - The account has not yet finished setting up their subscription
+        - `incomplete_expired` - The account has an expired incomplete invoice
+
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="ACTION" label="get_billing_status">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/billing-functions \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"action": "get_billing_status", "args": {"account_id": "uuid"}}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.functions.invoke('billing-functions', {
+                body: {
+                    action: "get_billing_status",
+                    args: {
+                        account_id: "uuid"
+                    }
+                }
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            func = supabase.functions()
+
+            @asyncio.coroutine
+            async def run_func(loop):
+                resp = await func.invoke("billing_functions",invoke_options={'body':{
+                "action": "get_billing_status",
+                "args": {
+                    "account_id": "uuid"
+                }
+            }})
+            return resp
+
+            loop = asyncio.get_event_loop()
+            resp = loop.run_until_complete(run_func(loop))
+            loop.close()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "subscription_id": "vendor_subscription_id",
+            "subscription_active": true,
+            "status": "active",
+            "billing_email": "your@email.com",
+            "account_role": "owner",
+            "is_primary_owner": true,
+            "billing_enabled": true,
+        }
+        ```
+    </Col>
+</Row>
+
+---
+
+## Updating subscription or payment method {{ tag: 'ACTION', label: 'get_billing_portal_url' }}
+
+<Row>
+    <Col>
+
+        Returns a URL for the account to update their subscription or payment method.  This URL will redirect the user to your billing provider's hosted page (Stripe, for example) where they can update their subscription or payment method.
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                UUID for the account you're trying to lookup available plans for. If an account_id is passed, the response will indicate which plan has been selected
+            </Property>
+            <Property name="return_url" type="string">
+                Where the user should be returned to once done. Must have an origin matching what's defined in the billing-functions endpoint.
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="ACTION" label="get_billing_portal_url">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/billing-functions \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"action": "get_billing_portal_url", "args": {"account_id": "uuid", "return_url": "string"}}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.functions.invoke('current_user_account_role', {
+                body: {
+                    action: "get_billing_portal_url",
+                    args: {
+                        account_id: "uuid",
+                        return_url: "string"
+                    }
+                }
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            func = supabase.functions()
+
+            @asyncio.coroutine
+            async def run_func(loop):
+                resp = await func.invoke("billing_functions",invoke_options={'body':{
+                    "action": "get_billing_portal_url",
+                    "args": {
+                        "account_id": "uuid",
+                        "return_url": "string"
+                    }
+                }})
+                return resp
+
+            loop = asyncio.get_event_loop()
+            resp = loop.run_until_complete(run_func(loop))
+            loop.close()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "url": "https://link-to-vendor-page",
+            "billing_enabled": true
+        }
+        ```
+    </Col>
+</Row>
+---
+
+## Start new subscription {{ tag: 'ACTION', label: 'get_new_subscription_url' }}
+
+<Row>
+    <Col>
+
+        Returns a URL for the account to start a new subscription.  This URL will redirect the user to your billing provider's hosted page (Stripe, for example) where they can start a new subscription.
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                UUID for the account you're trying to lookup available plans for. If an account_id is passed, the response will indicate which plan has been selected
+            </Property>
+            <Property name="success_url" type="string">
+                Where the user should be returned if successful. The url passed in must have an origin matching what's been setup in the billing-functions endpoint.
+            </Property>
+            <Property name="cancel_url" type="string">
+                Where the user should be returned if they cancel before completing. The url passed in must have an origin matching what's been setup in the billing-functions endpoint.
+            </Property>
+
+        </Properties>
+        ### Optional attributes
+        <Properties>
+            <Property name="plan_id" type="string">
+                The billing provider's plan id you want to subscribe the account to.  This can either be pulled manually from your providers dashboard or by calling the `get_plans` action. If not sent, the defined default plan will be used.
+            </Property>
+
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="ACTION" label="get_new_subscription_url">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/billing-functions \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"action": "get_new_subscription_url", "args": {"account_id": "uuid", "plan_id": "string", "success_url": "string", "cancel_url": "string"}}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.functions.invoke('current_user_account_role', {
+                body: {
+                    action: "get_new_subscription_url",
+                    args: {
+                        account_id: "uuid",
+                        plan_id: "string",
+                        success_url: "string",
+                        cancel_url: "string"
+                    }
+                }
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            func = supabase.functions()
+
+            @asyncio.coroutine
+            async def run_func(loop):
+                resp = await func.invoke("billing_functions",invoke_options={'body':{
+                    "action": "get_new_subscription_url",
+                    "args": {
+                        "account_id": "uuid",
+                        "plan_id": "string",
+                        "success_url": "string",
+                        "cancel_url": "string"
+                    }
+                }})
+                return resp
+
+            loop = asyncio.get_event_loop()
+            resp = loop.run_until_complete(run_func(loop))
+            loop.close()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "url": "https://link-to-vendor-page",
+            "billing_enabled": true
+        }
+        ```
+    </Col>
+</Row>
+
+---
+
+## Webhooks {{ tag: 'POST', label: '/billing-webhooks' }}
+
+<Row>
+    <Col>
+
+        This is a separate Supabase edge function that consumes webhooks from your billing provider to keep your Supabase database up to date. This is separate from the `billing-functions` endpoint.
+
+        Follow the provider setup instructions to learn more about how to configure webhooks for your billing provider.
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/billing-webhooks">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/billing-webhooks \
+            -X POST \
+            -H "Content-Type: application/json"
+            -d '{ ...provider-payload }'
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "status": "ok"
+        }
+        ```
+    </Col>
+</Row>

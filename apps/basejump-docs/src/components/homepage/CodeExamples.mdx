@@ -1,0 +1,58 @@
+import {CodeGroup} from "@/components/mdx.jsx";
+
+
+<CodeGroup title="Creating an account" tag="POST" label="/rpc/create_account">
+
+    ```js
+    import { createClient } from '@supabase/supabase-js'
+
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+    const {data, error} = await supabase.rpc('create_account', {
+        slug: 'team-slug',
+        name: 'Your Team Name',
+    });
+    ```
+
+    ```python
+    from supabase import create_client
+
+    supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+    response = supabase.rpc(fn="create_account", params={
+        "slug": "team-slug",
+        "name": "your team"
+    }).execute()
+    ```
+
+    ```swift
+    let client = SupabaseClient(supabaseURL: "{ SUPABASE_URL }", supabaseKey: "{ SUPABASE_ANON_KEY }")
+
+    struct CreateAccountParams: Codable {
+        let slug: String
+        let name: String
+    }
+
+    let query = client.database.rpc(
+        fn: "create_account",
+        params: CreateAccountParams(slug: "team-slug", name: "Team Name")
+    )
+
+    Task {
+        do {
+            let response: [DataModel] = try await query.execute().value
+            print("### Returned: \(response)")
+        } catch {
+            print("### RPC Error: \(error)")
+        }
+    }
+    ```
+
+    ```bash {{title: 'cURL'}}
+    curl -G https://YOUR_INSTANCE.com/rest/v1/rpc/create_account \
+    -d '{"slug": "team-slug", name: "Team Name"}' \
+    -H "Content-Type: application/json" \
+    -H "Authorization: Bearer SUPABASE_KEY" \
+    -H "apikey: SUPABASE_KEY" \
+    ```
+
+</CodeGroup>

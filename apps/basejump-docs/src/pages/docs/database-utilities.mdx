@@ -1,0 +1,168 @@
+import {CodeGroup, Col, Note, Properties, Property, Row} from "@/components/mdx";
+
+export const description = 'A collection of functions that are useful for building and scaling apps using Basejump.'
+
+# Database utility functions
+Database utility functions are a grab-bag of functions that we've found useful for building and scaling apps using Basejump.
+
+Functions that are defined in the `basejump` schema are available for use within database functions and RLS policies, but not through the API.
+
+
+## Get config {{ tag: 'FUNCTION', label: 'basejump.get_config' }}
+
+<Row>
+    <Col>
+        Returns the Basejump configuration for the current project as a JSON value.
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Usage" tag="FUNCTION" label="basejump.get_config">
+
+            ```sql {{title: 'SQL'}}
+            SELECT basejump.get_config();
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "enable_personal_accounts": true,
+            "enable_team_accounts": true,
+            // your config values can change based
+            // on your setup, but more will be
+            // returned here
+        }
+        ```
+
+    </Col>
+</Row>
+
+---
+
+## Check specific config {{ tag: 'FUNCTION', label: 'basejump.is_set' }}
+
+<Row>
+    <Col>
+        Returns true / false if a specific config value is set.
+
+        ### Required attributes
+        <Properties>
+            <Property name="field_name" type="text">
+                The name of the config field to check.
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Usage" tag="FUNCTION" label="basejump.is_set">
+            ```sql {{title: 'SQL'}}
+            SELECT basejump.is_set('enable_personal_accounts');
+            ```
+        </CodeGroup>
+
+    </Col>
+</Row>
+
+---
+
+## Generate secure token {{ tag: 'FUNCTION', label: 'basejump.generate_token' }}
+
+<Row>
+    <Col>
+        Generates a secure token of a given length.
+
+        ### Required attributes
+        <Properties>
+            <Property name="length" type="integer">
+                The length of the token to generate.
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Usage" tag="FUNCTION" label="basejump.generate_token">
+
+            ```sql {{title: 'SQL'}}
+            SELECT basejump.generate_token(32);
+            ```
+
+            ```sql {{title: 'TABLE DEFAULT'}}
+
+            CREATE TABLE public.invitations (
+                id uuid NOT NULL DEFAULT uuid_generate_v4(),
+                email text NOT NULL,
+                token text NOT NULL DEFAULT basejump.generate_token(32),
+                CONSTRAINT users_pkey PRIMARY KEY (id)
+            );
+            ```
+
+        </CodeGroup>
+
+    </Col>
+</Row>
+
+---
+
+## Track timestamps {{ tag: 'TRIGGER', label: 'basejump.trigger_set_timestamps' }}
+
+<Row>
+    <Col>
+        Trigger function to automatically track timestamps on a table.  Requires that the table have a `created_at` and `updated_at` column.
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Usage" tag="TRIGGER" label="basejump.trigger_set_timestamps">
+
+            ```sql {{title: 'SQL'}}
+             CREATE TABLE public.posts (
+                id uuid NOT NULL DEFAULT uuid_generate_v4(),
+                title text NOT NULL,
+                body text NOT NULL,
+                created_at timestamp with time zone NOT NULL DEFAULT now(),
+                updated_at timestamp with time zone NOT NULL DEFAULT now(),
+                CONSTRAINT posts_pkey PRIMARY KEY (id)
+            );
+
+            CREATE TRIGGER set_timestamps
+                BEFORE UPDATE ON public.posts
+                FOR EACH ROW
+                EXECUTE PROCEDURE basejump.trigger_set_timestamps();
+            ```
+
+        </CodeGroup>
+
+    </Col>
+</Row>
+
+---
+
+## Track user changes {{ tag: 'TRIGGER', label: 'basejump.trigger_set_user_tracking' }}
+
+<Row>
+    <Col>
+        Trigger function to automatically track who performed changes on a table.  Requires that the table have a `created_by` and `updated_by` column.
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Usage" tag="TRIGGER" label="basejump.trigger_set_user_tracking">
+
+            ```sql {{title: 'SQL'}}
+            CREATE TABLE public.posts (
+                id uuid NOT NULL DEFAULT uuid_generate_v4(),
+                title text NOT NULL,
+                body text NOT NULL,
+                created_by uuid NOT NULL,
+                updated_by uuid NOT NULL,
+                CONSTRAINT posts_pkey PRIMARY KEY (id)
+            );
+
+            CREATE TRIGGER set_timestamps
+                BEFORE UPDATE ON public.posts
+                FOR EACH ROW
+                EXECUTE PROCEDURE basejump.trigger_set_user_tracking();
+            ```
+
+        </CodeGroup>
+
+    </Col>
+</Row>

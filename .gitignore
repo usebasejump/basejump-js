@@ -18,6 +18,7 @@ node_modules
 
 # production
 /build
+dist/
 
 # misc
 .DS_Store
@@ -46,3 +47,6 @@ next-env.d.ts
 
 # turbo
 .turbo
+
+apps/nextjs-starter/supabase/config.toml
+apps/nextjs-starter/supabase/seed.sql

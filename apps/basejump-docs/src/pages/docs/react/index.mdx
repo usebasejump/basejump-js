@@ -1,0 +1,68 @@
+import {HeroPattern} from '@/components/HeroPattern.jsx'
+
+export const description =
+    'Launch your app even faster using the Basejump React UI components';
+
+<HeroPattern/>
+
+# Basejump React Components
+
+Basejump provides some easy to use components and hooks for launching your app even faster. Out of the box you'll get hooks for interacting with the Basejump APIs client side, and some utility components for things like showing/hiding content based on authentication status.
+
+We've also provided UI components built on top of [shadcn/ui](https://ui.shadcn.com).  These can be copy/pasted into your app and customized to your liking.  Under the hood, shadcn leverages [Tailwind CSS](https://tailwindcss.com) for styling and [Radix UI](https://radix-ui.com) for component primitives.
+
+<br /><br />
+
+# Getting started with Next.js
+Basejump provides a Next.js specific integration that depends on the Supabase Auth Helpers. It's identical to the React package except that it handles creating your Supabase client for you internally.
+
+<Note>
+    This guide assumes that you already have a Supabase instance setup somewhere.  If you don't yet have Supabase and Basejump setup, then you'll want to follow the [quick start guide](/docs/installation) first.
+</Note>
+
+### 1. Create a new application using the Supabase Next.js template
+The fastest way to get started is to use the Supabase Next.js template.
+
+```bash
+npx create-next-app -e with-supabase your-app-name
+```
+
+If you already have an existing app, then you'll need to install the `@supabase/supabase-js` and `@supabase/ssr` packages. The `ssr` package is brand new, so the easiest way to see how it's used is to check out the template repo from above.
+
+### 2. Install shadcn and tailwind (optional)
+If you plan on leveraging the Basejump UI components, you'll need to get shadcn setup for your app. You can follow the [shadcn installation guide for Next.js](https://ui.shadcn.com/docs/installation/next). It's quick and easy!
+
+### 3. Install the Basejump Next.js package
+
+<CodeGroup>
+    ```bash {{title: 'Yarn'}}
+        yarn add @usebasejump/next
+    ```
+
+    ```bash {{title: 'NPM'}}
+        npm install @usebasejump/next
+    ```
+</CodeGroup>
+
+<br /><br />
+
+# Getting started with React
+Basejump provides a Next.js specific integration that depends on the Supabase Auth Helpers. It's identical to the React package except that it handles creating your Supabase client for you internally.
+
+### 1. Install the Supabase JS client
+Follow the [Supabase guide to setting up React](https://supabase.com/docs/guides/getting-started/quickstarts/reactjs).
+
+### 2. Install shadcn and tailwind (optional)
+If you plan on leveraging the Basejump UI components, you'll need to get shadcn setup for your app. You can follow the [shadcn manually installation guide](https://ui.shadcn.com/docs/installation/manual).
+
+### 3. Install the Basejump React package
+
+<CodeGroup>
+    ```bash {{title: 'Yarn'}}
+    yarn add @usebasejump/react
+    ```
+
+    ```bash {{title: 'NPM'}}
+    npm install @usebasejump/react
+    ```
+</CodeGroup>

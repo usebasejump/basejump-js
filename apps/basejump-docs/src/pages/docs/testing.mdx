@@ -1,0 +1,59 @@
+# Testing
+If you plan to continue building out your app on Supabase, we recommend that you start writing tests for your database.  This will help you catch bugs early, and ensure that your app is working as expected.
+
+To help make testing with Supabase and Basejump easier, we've created a companion library called [supabase-test-helpers](https://github.com/usebasejump/supabase-test-helpers).
+
+## Getting started with pgTAP
+If you haven't written tests for your Supabase apps yet, we highly recommend you start! It's not too difficult once you get used to the structure - especially now that the Supabase CLI has pgTAP support built in. [Check out the official guide here](https://supabase.com/docs/guides/database/testing), but we've also included a quick start guide below.
+
+### 1. Install dbdev extension manager
+First, [install the dbdev extension manager into your Supabase instance](https://database.dev/installer).
+
+### 2. Installing Supabase Test Helpers
+Either add a migration file to your project for the installation, or install it directly into your Supabase instance.
+
+```sql
+select dbdev.install('basejump-supabase_test_helpers');
+```
+
+### 3. Setting up your Supabase project for testing
+
+```bash
+mkdir -p ./supabase/tests/database
+touch ./supabase/tests/database/your-first-tests.test.sql
+```
+
+## Writing your first test
+Now your'e ready to write your first tests.  You can check out a few resources we've pulled together for you to get started:
+- [A Guide to testing on Supabase using pgTAP](https://usebasejump.com/blog/testing-on-supabase-with-pgtap) - a blog post we wrote on the topic with commonly used testing formats for your RLS policies
+- [Supabase Test Helpers function overview](https://github.com/usebasejump/supabase-test-helpers) - a list of all the functions available to you in the Supabase Test Helpers library
+- [Official Supabase testing docs](https://supabase.com/docs/guides/database/testing) - a bit lightweight for now, but I suspect these get fleshed out more over time
+
+### Example test
+```sql {{title: "./supabase/tests/database/your-first-tests.test.sql"}}
+BEGIN;
+    -- We activate the extension INSIDE a test so that it's never activated in production
+    CREATE EXTENSION "basejump-supabase_test_helpers";
+    -- Indicate how many tests we expect to run
+    select plan(1);
+    -- create users for testing
+    select tests.create_supabase_user('test_owner');
+    -- create an example post for testing
+    insert into posts (title, body, user_id) values ('test post', 'this is a test post', tests.get_supabase_uid('test_owner'));
+    -- ensure you're anon
+    select tests.clear_authentication();
+    SELECT
+        is_empty(
+                $$ select * from posts $$,
+                'Anon cannot select posts'
+            );
+    select * from finish();
+ROLLBACK;
+```
+
+## Running your tests
+Now that you've written your first test, you can run it using the Supabase CLI:
+
+```bash
+supabase test db
+```

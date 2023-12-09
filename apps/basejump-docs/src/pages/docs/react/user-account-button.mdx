@@ -1,0 +1,232 @@
+import {CodeGroup, Note} from "@/components/mdx.jsx";
+export const meta = {
+    title: 'User Account Button - React',
+    description: 'User account button component for Basejump powered by shadcn',
+};
+
+# UserAccountButton
+
+The account select component is a combobox of accounts that the current user belongs to, including their personal account.
+
+The `<UserAccountButton />` component is powered by shadcn, meaning the code and all it's components are local to your codebase for easy customization.
+The inspiration for the component design was borrowed heavily from the [shadcn dashboard example app](https://ui.shadcn.com/examples/dashboard).
+
+## Preview
+
+![UserAccountButton](/images/docs/react/user-account-button.png)
+
+## Usage
+
+```jsx
+    import UserAccountButton from "@/components/basejump/UserAccountButton.tsx";
+
+    export default function UserAccountButtonDemo() {
+        return (
+            <UserAccountButton />
+        )
+    }
+    
+````
+
+## Installation
+
+This assumes that you've followed the [react or nextjs getting started guide](/docs/react) and have a working shadcn installation.
+
+### 1. Install required shadcn components
+```bash
+npx shadcn-ui@latest add dropdown-menu button
+yarn add lucide-react
+```
+
+### 2. Copy / Paste the `<UserAccountButton />` component into your codebase
+<Note>
+    The **Next.js RSC component** leverages server actions and cannot be embedded inside of other client components. If your app isn't setup for that, use the Client Component instead.
+
+    The **Next.js RSC** component requires that you have a `createClient` method created that returns a Supabase client. If you used the `create-next-app -e with-supabase` installation, then this has already been created for you.
+</Note>
+<CodeGroup>
+    ```jsx {{title: "Next.js RSC", tag: "@/components/basejump/UserAccountButton.tsx"}}
+        import {Button} from "@/components/ui/button"
+        import {
+            DropdownMenu,
+            DropdownMenuContent,
+            DropdownMenuGroup,
+            DropdownMenuItem,
+            DropdownMenuLabel,
+            DropdownMenuSeparator,
+            DropdownMenuTrigger,
+        } from "@/components/ui/dropdown-menu"
+        import Link from "next/link";
+        import {UserIcon} from "lucide-react";
+        import {createClient} from "@/utils/supabase/server.ts";
+        import {redirect} from "next/navigation";
+        import {cookies} from "next/headers";
+
+        export default async function UserAccountButton() {
+            const cookieStore = cookies();
+            const supabaseClient = createClient(cookieStore);
+            const {data: personalAccount} = await supabaseClient.rpc('get_personal_account');
+
+            const signOut = async () => {
+                'use server'
+
+                const cookieStore = cookies()
+                const supabase = createClient(cookieStore)
+                await supabase.auth.signOut()
+                return redirect('/login')
+            }
+
+            return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <Button variant="ghost">
+                            <UserIcon />
+                        </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-56" align="end" forceMount>
+                        <DropdownMenuLabel className="font-normal">
+                            <div className="flex flex-col space-y-1">
+                                <p className="text-sm font-medium leading-none">{personalAccount.name}</p>
+                                <p className="text-xs leading-none text-muted-foreground">
+                                    {personalAccount.email}
+                                </p>
+                            </div>
+                        </DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuGroup>
+                            <DropdownMenuItem asChild>
+                                <Link href="/dashboard">Account</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                                <Link href="/dashboard/settings">Settings</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem asChild>
+                                <Link href="/dashboard/settings/teams">Teams</Link>
+                            </DropdownMenuItem>
+                        </DropdownMenuGroup>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem>
+                        <form action={signOut}>
+                            <button>Log out</button>
+                        </form>
+                        </DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            )
+        }
+    ```
+    ```jsx {{title: "Next.js Client Component", tag: "@/components/basejump/UserAccountButton.tsx"}}
+    import {Button} from "@/components/ui/button"
+    import {usePersonalAccount} from "@usebasejump/next"
+    import {
+        DropdownMenu,
+        DropdownMenuContent,
+        DropdownMenuGroup,
+        DropdownMenuItem,
+        DropdownMenuLabel,
+        DropdownMenuSeparator,
+        DropdownMenuTrigger,
+    } from "@/components/ui/dropdown-menu"
+    import Link from "next/link";
+    import {UserIcon} from "lucide-react";
+
+    export default function UserAccountButton() {
+        const {data: personalAccount} = usePersonalAccount()
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost">
+                        <UserIcon />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none">{personalAccount?.name}</p>
+                            <p className="text-xs leading-none text-muted-foreground">
+                                {personalAccount?.email}
+                            </p>
+                        </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                        <DropdownMenuItem asChild>
+                            <Link href="/dashboard">Account</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href="/dashboard/settings">Settings</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href="/dashboard/settings/teams">Teams</Link>
+                        </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                        <Link href="/auth/logout">Teams</Link>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        )
+    }
+
+    ```
+    ```jsx {{title: "React", tag: "@/components/basejump/UserAccountButton.tsx"}}
+    import {Button} from "@/components/ui/button"
+    import {usePersonalAccount} from "@usebasejump/react"
+    import {
+        DropdownMenu,
+        DropdownMenuContent,
+        DropdownMenuGroup,
+        DropdownMenuItem,
+        DropdownMenuLabel,
+        DropdownMenuSeparator,
+        DropdownMenuTrigger,
+    } from "@/components/ui/dropdown-menu"
+    import Link from "next/link";
+    import {UserIcon} from "lucide-react";
+    import {createClient} from "@usebasejump/react";
+
+    export default function UserAccountButton() {
+        const supabaseClient = createClient();
+        const {data: personalAccount} = usePersonalAccount(supabaseClient)
+
+        return (
+            <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                    <Button variant="ghost">
+                        <UserIcon />
+                    </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                            <p className="text-sm font-medium leading-none">{personalAccount?.name}</p>
+                            <p className="text-xs leading-none text-muted-foreground">
+                                {personalAccount?.email}
+                            </p>
+                        </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuGroup>
+                        <DropdownMenuItem asChild>
+                            <Link href="/dashboard">Account</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href="/dashboard/settings">Settings</Link>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem asChild>
+                            <Link href="/dashboard/settings/teams">Teams</Link>
+                        </DropdownMenuItem>
+                    </DropdownMenuGroup>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>
+                        <Link href="/auth/logout">Teams</Link>
+                    </DropdownMenuItem>
+                </DropdownMenuContent>
+            </DropdownMenu>
+        )
+    }
+
+    ```
+</CodeGroup>

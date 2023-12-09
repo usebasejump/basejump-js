@@ -1,0 +1,344 @@
+import {Properties, Property, Row, Col} from "@/components/mdx.jsx";
+export const description =
+    'API endpoints for managing invitations in Supabase with Basejump'
+
+# Invitations
+
+Invitations are how you can invite users to your account. They can be generated for single-use or multiple use for 24 hours.
+
+## The invitations model
+
+Invitations are good for 24 hours and have a pretty basic structure.
+
+### Properties
+
+<Properties>
+    <Property name="account_role" type="string">
+        The role that the accepting user will receive within the account. Typically `member` or `owner`.
+    </Property>
+    <Property name="created_at" type="timestamp">
+        Invitations expire after 24 hours by default, so this will tell you how much longer you have left.
+    </Property>
+    <Property name="invitation_type" type="string">
+        The type of invitation. One of `24_hour` or `one_time`.  One time invitations expire as soon as they're used once and are valid for up to 24 hours. 24 hour invitations can be used multiple times for 24 hours.
+    </Property>
+    <Property name="name" type="string">
+        The name of the account the invitation is good for. Used for showing users before they accept the invitation.
+    </Property>
+    <Property name="active" type="boolean">
+        Whether or not the invitation is still active. Once an invitation has been claimed or expires, looking it up will show it as not valid.
+    </Property>
+</Properties>
+
+---
+
+## List all invitations {{ tag: 'POST', label: '/rpc/get_account_invitations' }}
+
+<Row>
+    <Col>
+        Returns a list of all active invitations on a given account. Once an invitation has been claimed or expires, it will no longer be returned.
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                Unique UUID for the account you're trying to lookup
+            </Property>
+        </Properties>
+
+        ### Optional attributes
+        <Properties>
+            <Property name="results_limit" type="integer">
+                Limit the number of results returned. Default is 50.
+            </Property>
+            <Property name="results_offset" type="integer">
+                Offset the results returned. Default is 0.
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/get_account_invitations">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/rest/v1/rpc/get_account_invitations \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"account_id": "uuid"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('get_account_invitations', {
+            account_id: "uuid"
+        });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="get_account_invitations", params = {
+            "account_id": "uuid"
+        }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        [
+            {
+                "account_role": "member",
+                "created_at": "timestamp",
+                "invitation_type": "24_hour",
+                "invitation_id": "uuid"
+            },
+            ...
+        ]
+        ```
+    </Col>
+</Row>
+
+---
+
+## Create an invitation {{ tag: 'POST', label: '/rpc/create_invitation' }}
+
+<Row>
+    <Col>
+        Create a new invitation for an account with a given role. This will return a unique token that can be used to lookup the invitation later. Users then send this token along with an accept URL to the user they're inviting.
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                Unique UUID for the account you're creating an invitation to
+            </Property>
+            <Property name="account_role" type="string">
+                The role that the accepting user will receive within the account. Typically `member` or `owner`.
+            </Property>
+            <Property name="invitation_type" type="string">
+                The type of invitation. One of `24_hour` or `one_time`.  One time invitations expire as soon as they're used once and are valid for up to 24 hours. 24 hour invitations can be used multiple times for 24 hours.
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/create_invitation">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/rest/v1/rpc/create_invitation \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"account_id": "uuid", "account_role": "member", "invitation_type": "one_time"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('create_invitation', {
+                account_id: "uuid",
+                account_role: "member",
+                invitation_type: "one_time"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="create_invitation", params = {
+                "account_id": "uuid",
+                "account_role": "member",
+                "invitation_type": "one_time"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "token": "your-user-invitation-token"
+        }
+        ```
+    </Col>
+</Row>
+
+---
+
+## Lookup an invitation {{ tag: 'POST', label: '/rpc/lookup_invitation' }}
+
+<Row>
+    <Col>
+        Lookup a single invitation. Used on invitation accept pages to let the user know what account they've been invited to.
+
+        ### Required attributes
+        <Properties>
+            <Property name="lookup_invitation_token" type="string">
+                Unique token for the invitation you're trying to lookup
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/lookup_invitation">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/rest/v1/rpc/lookup_invitation \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"lookup_invitation_token": "string"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('lookup_invitation', {
+                lookup_invitation_token: "string"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="lookup_invitation", params = {
+                "lookup_invitation_token": "string"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "name": "Your Team",
+            "active": true
+        }
+        ```
+    </Col>
+</Row>
+
+---
+
+## Accept an invitation {{ tag: 'POST', label: '/rpc/accept_invitation' }}
+
+<Row>
+    <Col>
+        Accept an invitation using the given account token.  If valid, will add the user to the account and return the account ID for navigation.
+        ### Required attributes
+        <Properties>
+            <Property name="lookup_invitation_token" type="string">
+                Unique token for the invitation you're trying to lookup
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/accept_invitation">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/rest/v1/rpc/accept_invitation \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"lookup_invitation_token": "string"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('accept_invitation', {
+                lookup_invitation_token: "string"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="accept_invitation", params = {
+                "lookup_invitation_token": "string"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        {
+            "account_id": "uuid",
+            "slug": "your-team",
+            "account_role": "member"
+        }
+        ```
+    </Col>
+</Row>
+
+---
+
+## Delete an invitation {{ tag: 'POST', label: '/rpc/delete_invitation' }}
+
+<Row>
+    <Col>
+        Allows any owner of the account to delete an active invitation before it gets accepted.
+
+        ### Required attributes
+        <Properties>
+            <Property name="invitation_id" type="uuid">
+                Unique ID for the invitation you want to delete. You get this from the get_account_invitations endpoint.
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/delete_invitation">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/rest/v1/rpc/delete_invitation \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"invitation_id": "uuid"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('delete_invitation', {
+                invitation_id: "uuid"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="delete_invitation", params = {
+                "invitation_id": "string"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        No response
+        ```
+    </Col>
+</Row>
+
+

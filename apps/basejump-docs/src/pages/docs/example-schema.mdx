@@ -1,0 +1,136 @@
+# Creating new protected tables
+One of the primary benefits of Supabase is the ability to leverage RLS to restrict access to tables and data. Basejump makes it easy to create tables that can only be accessed by account members or owners.
+
+```bash
+npx @usebasejump/cli@latest generate table posts
+```
+
+You can also list out any additional columns you want to add to the table.
+
+```bash
+npx @usebasejump/cli@latest generate table posts title body published:boolean published_at:date
+```
+
+<br /><br/>
+
+# Manually creating new tables.
+
+Here's an example table schema you can use when creating new tables in Supabase that are segmented by account.
+
+Just replace `{{modelName}}` with the name of your table and add any additional columns you need.
+
+For example, if you're building a blog, you might create a `posts` table and add title and content columns.
+
+```sql
+
+CREATE TABLE IF NOT EXISTS public.{{modelName}}
+(
+    id uuid unique NOT NULL DEFAULT uuid_generate_v4() primary key,
+    -- If your model is owned by an account, you want to make sure you have an account_id column
+    -- referencing the account table. Make sure you also set permissions appropriately
+    account_id uuid not null references accounts(id),
+
+    -- ADD YOUR COLUMNS HERE
+
+    -- timestamps are useful for auditing
+    -- Basejump has some convenience functions defined below for automatically handling these
+    updated_at timestamp with time zone,
+    created_at timestamp with time zone,
+    -- Useful for tracking who made changes to a record
+    -- Basejump has some convenience functions defined below for automatically handling these
+    updated_by uuid references auth.users(id),
+    created_by uuid references auth.users(id),
+);
+
+
+-- protect the timestamps by setting created_at and updated_at to be read-only and managed by a trigger
+CREATE TRIGGER set_{{modelName}}_timestamp
+    BEFORE INSERT OR UPDATE ON public.{{modelName}}
+    FOR EACH ROW
+EXECUTE PROCEDURE basejump.trigger_set_timestamps();
+
+-- protect the updated_by and created_by columns by setting them to be read-only and managed by a trigger
+CREATE TRIGGER set_{{modelName}}_user_tracking
+    BEFORE INSERT OR UPDATE ON public.{{modelName}}
+    FOR EACH ROW
+EXECUTE PROCEDURE basejump.trigger_set_user_tracking();
+
+
+-- enable RLS on the table
+ALTER TABLE public.{{modelName}} ENABLE ROW LEVEL SECURITY;
+
+
+-- Because RLS is enabled, this table will NOT be accessible to any users by default
+-- You must create a policy for each user that should have access to the table
+-- Here are a few example policies that you may find useful when working with Basejump
+
+----------------
+-- Authenticated users should be able to read all records regardless of account
+----------------
+-- create policy "All logged in users can select" on public.{{modelName}}
+--     for select
+--     to authenticated
+--     using (true);
+
+----------------
+-- Authenticated AND Anon users should be able to read all records regardless of account
+----------------
+-- create policy "All authenticated and anonymous users can select" on public.{{modelName}}
+--     for select
+--     to authenticated, anon
+--     using (true);
+
+-------------
+-- Users should be able to read records that are owned by an account they belong to
+--------------
+-- create policy "Account members can select" on public.{{modelName}}
+--     for select
+--     to authenticated
+--     using (
+--     (account_id IN ( SELECT basejump.get_accounts_with_role()))
+--     );
+
+
+----------------
+-- Users should be able to create records that are owned by an account they belong to
+----------------
+-- create policy "Account members can insert" on public.{{modelName}}
+--     for insert
+--     to authenticated
+--     with check (
+--     (account_id IN ( SELECT basejump.get_accounts_with_role()))
+--     );
+
+---------------
+-- Users should be able to update records that are owned by an account they belong to
+---------------
+-- create policy "Account members can update" on public.{{modelName}}
+--     for update
+--     to authenticated
+--     using (
+--     (account_id IN ( SELECT basejump.get_accounts_with_role()))
+--     );
+
+----------------
+-- Users should be able to delete records that are owned by an account they belong to
+----------------
+-- create policy "Account members can delete" on public.{{modelName}}
+--     for delete
+--     to authenticated
+--     using (
+--     (account_id IN ( SELECT basejump.get_accounts_with_role()))
+--     );
+
+----------------
+-- Only account OWNERS should be able to delete records that are owned by an account they belong to
+----------------
+-- create policy "Account owners can delete" on public.{{modelName}}
+--     for delete
+--     to authenticated
+--     using (
+--     (account_id IN ( SELECT basejump.get_accounts_with_role("owner")))
+--      );
+
+
+
+```

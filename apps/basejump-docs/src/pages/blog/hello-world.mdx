@@ -1,0 +1,17 @@
+export const meta = {
+    title: "Introducing Basejump",
+    published: "2021-10-23",
+    description: "Basejump is an opinionated NextJS starter project that includes team accounts, billing and more",
+    category: "Announcements",
+}
+
+Basejump started as the first three weeks of another project I was working on. I'd decided to use it for learning [Supabase](https://supabase.com/), but very quickly realized that there aren't a lot of guides on how to
+leverage it for more serious projects.  In particular, things like team accounts, permissions and testing are fairly poorly documented.
+
+At first, I planned on abstracting the basic SaaS setup into a starter kit and charging for it. Since then, I've learned a ton about RLS and some of the gotchas there for more complex permissions. Also, pgTAP is great once you get the hang of it, but can be pretty intimidating to get going. The end result can be some pretty poor permission logic that can lead to security bugs.
+
+As a result, I've decided instead to release Basejump as an open source project. That way more folks can benefit from some of my mistakes, contribute improvements and hopefully avoid some headache.
+
+I have additional plans for the project, but think it's reached a decent enough spot to be useful, so here it is!
+
+You can check out [Basejump on Github](https://github.com/usebasejump/basejump).

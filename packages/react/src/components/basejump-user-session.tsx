@@ -1,36 +1,29 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
-import { AuthError, SupabaseClient } from "@supabase/supabase-js";
-import { Session } from "@supabase/auth-helpers-react";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {createContext, ReactNode, useContext, useEffect, useMemo, useState} from "react";
+import {AuthError, Session, SupabaseClient} from "@supabase/supabase-js";
 
 type Props = {
   supabaseClient: SupabaseClient;
-  invitationUrlTemplate?: string;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 type BASEJUMP_PROVIDER = {
   supabaseClient: SupabaseClient | null;
-  isLoading: boolean;
+  loading: boolean;
   error: AuthError | null;
   session: null | Session;
-  invitationUrlTemplate?: string;
 };
 const BasejumpContext = createContext<BASEJUMP_PROVIDER | null>({
   supabaseClient: null,
-  isLoading: true,
+  loading: true,
   error: null,
   session: null,
 });
 
-const queryClient = new QueryClient();
-
 export const BasejumpUserSession = ({
   supabaseClient,
-  children,
-  invitationUrlTemplate,
+  children
 }: Props) => {
   const [session, setSession] = useState<null | Session>(null);
   const [loading, setIsLoading] = useState<boolean>(true);
@@ -89,8 +82,7 @@ export const BasejumpUserSession = ({
         loading: true,
         session: null,
         error: null,
-        supabaseClient,
-        invitationUrlTemplate,
+        supabaseClient
       };
     }
 
@@ -99,8 +91,7 @@ export const BasejumpUserSession = ({
         loading: false,
         session: null,
         error,
-        supabaseClient,
-        invitationUrlTemplate,
+        supabaseClient
       };
     }
 
@@ -108,14 +99,13 @@ export const BasejumpUserSession = ({
       loading: false,
       session,
       error: null,
-      supabaseClient,
-      invitationUrlTemplate,
+      supabaseClient
     };
   }, [loading, session, error]);
 
   return (
     <BasejumpContext.Provider value={providerValue}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      {children}
     </BasejumpContext.Provider>
   );
 };
@@ -134,7 +124,7 @@ export const useBasejumpSession = () => {
   const context = useContext(BasejumpContext);
   if (context === undefined) {
     throw new Error(
-      "useBasejumpClient must be used within a BasejumpUserSession"
+      "useBasejumpSession must be used within a BasejumpUserSession"
     );
   }
   return context?.session;
