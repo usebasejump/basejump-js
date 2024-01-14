@@ -4,7 +4,7 @@
  */
 
 import {serve} from "https://deno.land/std@0.168.0/http/server.ts";
-import {billingWebhooksWrapper, stripeWebhookHandler} from "https://deno.land/x/basejump@v2.0.1/billing-functions/mod.ts";
+import {billingWebhooksWrapper, stripeWebhookHandler} from "https://deno.land/x/basejump@v2.0.3/billing-functions/mod.ts";
 
 
 import Stripe from "https://esm.sh/stripe@11.1.0?target=deno";

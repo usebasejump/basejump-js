@@ -3,7 +3,7 @@
  * TO SETUP ON YOUR OWN, HEAD TO https://usebasejump.com
  */
 import {serve} from "https://deno.land/std@0.168.0/http/server.ts";
-import {billingFunctionsWrapper, stripeFunctionHandler} from "https://deno.land/x/basejump@v2.0.1/billing-functions/mod.ts";
+import {billingFunctionsWrapper, stripeFunctionHandler} from "https://deno.land/x/basejump@v2.0.3/billing-functions/mod.ts";
 
 import Stripe from "https://esm.sh/stripe@11.1.0?target=deno";
 
