@@ -4,7 +4,7 @@ export const tsup: Options = {
     dts: true,
     entryPoints: ['src/index.tsx'],
     external: ['react', /^@usebasejump\//],
-    format: ['cjs'],
+    format: ['esm', 'cjs'],
     legacyOutput: false,
     sourcemap: true,
     splitting: false,
