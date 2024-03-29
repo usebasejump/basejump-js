@@ -62,7 +62,7 @@ Because billing functions share an endpoint, you need to pass through the action
 
             const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-            const {data, error} = await supabase.functions.invoke('current_user_account_role', {
+            const {data, error} = await supabase.functions.invoke('billing-functions', {
                 body: {
                     action: "get_plans",
                     args: {
@@ -242,7 +242,7 @@ Because billing functions share an endpoint, you need to pass through the action
 
             const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-            const {data, error} = await supabase.functions.invoke('current_user_account_role', {
+            const {data, error} = await supabase.functions.invoke('billing-functions', {
                 body: {
                     action: "get_billing_portal_url",
                     args: {
@@ -333,7 +333,7 @@ Because billing functions share an endpoint, you need to pass through the action
 
             const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
-            const {data, error} = await supabase.functions.invoke('current_user_account_role', {
+            const {data, error} = await supabase.functions.invoke('billing-functions', {
                 body: {
                     action: "get_new_subscription_url",
                     args: {
