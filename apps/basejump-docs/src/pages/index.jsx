@@ -27,9 +27,6 @@ const IndexPage = () => (
               </Button>
             </Link>
           </div>
-          <Note>
-            Looking for the original open source Basejump NextJS SaaS starter template? <br /><a href="https://legacy.usebasejump.com" target="_blank" rel="noopener noreferrer">Check it out here.</a>
-          </Note>
         </div>
         <div className="grid gap-y-10 pt-8 lg:gap-y-28 lg:gap-y-40">
           <HomepageFeatures />
