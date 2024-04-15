@@ -103,3 +103,137 @@ Not all endpoints return all account data - particularly around billing as that 
         ```
     </Col>
 </Row>
+
+---
+
+## Remove Team Member {{ tag: 'POST', label: '/rpc/remove_account_member' }}
+
+<Row>
+    <Col>
+        Returns a list of all members on a given account.
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                Unique UUID for the account you're removing the member from
+            </Property>
+            <Property name="user_id" type="uuid">
+                Unique UUID for the user you're trying to remove
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/remove_account_member">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/rest/v1/rpc/get_account_members \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"account_id": "uuid", "user_id": "uuid"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('remove_account_member', {
+                account_id: "uuid",
+                user_id: "uuid"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="remove_account_member", params = {
+                "account_id": "uuid",
+                "user_id": "uuid"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        // NO RESPONSE
+        ```
+    </Col>
+</Row>
+
+---
+
+## Update user role {{ tag: 'POST', label: '/rpc/update_account_user_role' }}
+
+<Row>
+    <Col>
+
+        Updates the role of a user in a given account. Also allows you to change the primary owner of an account.
+
+        ### Required attributes
+        <Properties>
+            <Property name="account_id" type="uuid">
+                Unique UUID for the account you're trying to lookup
+            </Property>
+            <Property name="user_id" type="uuid">
+                Unique UUID for the user you're trying to update the role for
+            </Property>
+            <Property name="new_account_role" type="account_role">
+                The new role you want to assign to the user. By default can be `member` or `owner` unless you've added custom roles.
+            </Property>
+        </Properties>
+
+        ### Optional attributes
+        <Properties>
+            <Property name="make_primary_owner" type="boolean">
+                <Note>Only the current primary owner can make this change.</Note>
+                Defaults to `false`. If you want to make the user the primary owner of the account, set this to `true`. You must also set the user's role to `owner` when doing this.
+            </Property>
+        </Properties>
+    </Col>
+    <Col sticky>
+
+        <CodeGroup title="Request" tag="POST" label="/rpc/update_account_user_role">
+
+            ```bash {{title: 'cURL'}}
+            curl -G https://YOUR_SUPABASE/rest/v1/rpc/update_account_user_role \
+            -X POST \
+            -H "Authorization: Bearer SUPABASE_AUTH_TOKEN" \
+            -H "apikey: SUPABASE_ANON_KEY" \
+            -H "Content-Type: application/json"
+            -d '{"account_id": "uuid", "user_id": "uuid", "new_account_role": "member"}'
+            ```
+
+            ```js
+            import { createClient } from '@supabase/supabase-js'
+
+            const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+
+            const {data, error} = await supabase.rpc('update_account_user_role', {
+                account_id: "uuid",
+                user_id: "uuid",
+                new_account_role: "member"
+            });
+            ```
+
+            ```python
+            from supabase import create_client
+
+            supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+            response = supabase.rpc(fn="update_account_user_role", params = {
+                "account_id": "uuid",
+                "user_id": "uuid",
+                "new_account_role": "member"
+            }).execute()
+            ```
+
+        </CodeGroup>
+
+        ```json {{title: 'Response'}}
+        empty response
+        ```
+    </Col>
+</Row>
