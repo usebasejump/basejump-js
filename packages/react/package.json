@@ -1,8 +1,9 @@
 {
   "name": "@usebasejump/react",
   "version": "0.0.5",
-  "main": "dist/index.js",
+  "main": "dist/index.mjs",
   "module": "dist/index.mjs",
+  "type":"module",
   "types": "dist/index.d.ts",
   "files": [
     "dist"
