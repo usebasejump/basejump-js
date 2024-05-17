@@ -2,7 +2,7 @@ import SettingsNavigation from "@/components/dashboard/SettingsNavigation";
 import DashboardTitle from "@/components/dashboard/DashboardTitle";
 import {Separator} from "@/components/ui/separator.tsx";
 
-export default function PersonalAccountSettingsPage({children}) {
+export default function PersonalAccountSettingsPage({children}: {children: React.ReactNode}) {
     const items = [
         { name: "Profile", href: "/dashboard/settings" },
         { name: "Teams", href: "/dashboard/settings/teams" },
